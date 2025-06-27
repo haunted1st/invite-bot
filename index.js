@@ -44,6 +44,7 @@ const CHANNEL_DECLINE_ID = '1386830559136714825';
 const CHANNEL_LOG_ID = '1304923881294925876';
 const INVITE_CHANNEL_ID = '1387148896320487564';
 
+// Функция создания уведомления о статусе заявки
 function createStatusNotificationEmbed(status, applicationName, channelName = '', guildId, applicationLink = '') {
   let color;
   let title = '';
@@ -85,6 +86,7 @@ function createStatusNotificationEmbed(status, applicationName, channelName = ''
     .setTimestamp();
 }
 
+// Этот блок выполняется, когда бот готов к работе
 client.once('ready', async () => {
   console.log(`✅ Бот запущен как ${client.user.tag}`);
 
@@ -116,6 +118,7 @@ client.once('ready', async () => {
   await inviteChannel.send({ embeds: [embed], components: [row] });
 });
 
+// Обработка всех взаимодействий с кнопками
 client.on('interactionCreate', async (interaction) => {
   if (interaction.isButton() && interaction.customId === 'open_modal') {
     const modal = new ModalBuilder().setCustomId('application_modal').setTitle('📝 Заявка в семью');
@@ -205,7 +208,23 @@ client.on('interactionCreate', async (interaction) => {
     }
   }
 
-  // Обработка кнопки "Рассмотрение"
+  // Обработка кнопки "Принять"
+  if (interaction.isButton() && interaction.customId.startsWith('accept_app:')) {
+    const targetUserId = interaction.customId.split(':')[1];
+    const guild = interaction.guild;
+    const member = await guild.members.fetch(targetUserId).catch(() => null);
+    if (!member) return interaction.reply({ content: 'Пользователь не найден', ephemeral: true });
+
+    // Убедитесь, что статус "принято" правильно создаётся
+    const applicationName = 'G A R C I A';
+    const embed = createStatusNotificationEmbed('принято', applicationName, '', guild.id);
+
+    // Отправка уведомления в личку
+    await member.send({ embeds: [embed] }).catch(() => {});
+    await interaction.reply({ content: '✅ Уведомление о принятии отправлено.', ephemeral: true });
+  }
+
+  // --- Обработка кнопки "Рассмотрение" с использованием новой функции ---
   if (interaction.isButton() && interaction.customId.startsWith('review_app:')) {
     const targetUserId = interaction.customId.split(':')[1];
     const guild = interaction.guild;
