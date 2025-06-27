@@ -120,7 +120,7 @@ client.once('ready', async () => {
       '2. Заполните все поля формы.\n' +
       '3. Отправьте форму, и мы рассмотрим вашу заявку в ближайшее время.'
     )
-    .setImage('https://media.discordapp.net/attachments/1300952214164209746/1387916836452044907/video_3_2_smooth.gif')
+    .setImage('https://media.discordapp.net/attachments/1300952767078203493/1388174214187581582/ezgif-61741d6e62f365.gif')
     .setColor(0x2f3136);
 
   const button = new ButtonBuilder()
