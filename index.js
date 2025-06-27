@@ -111,17 +111,20 @@ client.once('ready', async () => {
   const botMessage = messages.find(m => m.author.id === client.user.id);
   if (botMessage) await botMessage.delete().catch(() => {});
 
-  const embed = new EmbedBuilder()
+  const gifEmbed = new EmbedBuilder()
+  .setImage('https://i.imgur.com/cdE2sAJ.gif')
+  .setColor(0x2f3136);
+
+const formEmbed = new EmbedBuilder()
   .setTitle('📋 Заполните форму')
   .setDescription(
-    '![gif](https://i.imgur.com/cdE2sAJ.gif)\n\n' +
     'Нажмите на кнопку ниже, чтобы оставить заявку.\n\n' +
     '**Как это работает?**\n' +
     '1. Нажмите на кнопку **Оставить заявку**.\n' +
     '2. Заполните все поля формы.\n' +
     '3. Отправьте форму, и мы рассмотрим вашу заявку в ближайшее время.'
   )
-  .setImage('https://media.discordapp.net/attachments/1300952767078203493/1388174214187581582/ezgif-61741d6e62f365.gif') // твоя гифка остаётся
+  .setImage('https://media.discordapp.net/attachments/1300952767078203493/1388174214187581582/ezgif-61741d6e62f365.gif')
   .setColor(0x2f3136);
 
   const button = new ButtonBuilder()
@@ -130,7 +133,7 @@ client.once('ready', async () => {
     .setStyle(ButtonStyle.Primary);
 
   const row = new ActionRowBuilder().addComponents(button);
-  await inviteChannel.send({ embeds: [embed], components: [row] });
+  await inviteChannel.send({ embeds: [gifEmbed, formEmbed], components: [row] });
 });
 
 client.on('interactionCreate', async (interaction) => {
