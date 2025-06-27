@@ -219,17 +219,22 @@ client.on('interactionCreate', async (interaction) => {
 
     const moderator = interaction.user;
 
+    // Логирование в канал логов
     const logChannel = await client.channels.fetch(CHANNEL_LOG_ID);
     await logChannel.send(`${moderator} взял заявку пользователя <@${targetUserId}> на рассмотрение.`);
 
+    // Отправка уведомления в канал с упоминанием
     await interaction.reply({
       content: `Заявка пользователя <@${targetUserId}> взята на рассмотрение модератором ${moderator}`,
       flags: 64,
     });
 
-    // Отправить личное сообщение с упоминанием
+    // Отправка личного сообщения пользователю с упоминанием модератора
     await member.send({
       content: `Здравствуйте, ваша заявка находится на рассмотрении у модератора ${moderator}.`
+    }).catch(() => {
+      // Если не удается отправить личное сообщение
+      interaction.followUp({ content: '❌ Не удалось отправить личное сообщение пользователю.' });
     });
   }
 
