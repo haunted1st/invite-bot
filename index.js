@@ -136,11 +136,11 @@ client.on('interactionCreate', async (interaction) => {
   if (interaction.isButton() && interaction.customId === 'open_modal') {
     const modal = new ModalBuilder().setCustomId('application_modal').setTitle('📝 Заявка в семью');
     const fields = [
-      { id: 'nickname_stat', label: 'Никнейм и статик', style: TextInputStyle.Short, placeholder: 'Sky Garcia | 100000' },
+      { id: 'nickname_stat', label: 'Никнейм | статик', style: TextInputStyle.Short, placeholder: 'Sky Garcia | 100000' },
       { id: 'irl_name_age', label: 'IRL Имя | возраст', style: TextInputStyle.Short, placeholder: 'Тима | 20' },
       { id: 'family_history', label: 'В каких семьях состояли ранее?', style: TextInputStyle.Paragraph, placeholder: 'Укажите, если были в других семьях' },
       { id: 'servers', label: 'На каких серверах вкачаны персонажи?', style: TextInputStyle.Short, placeholder: '06, 11, 15' },
-      { id: 'recoil_links', label: 'Откаты стрельбы (YouTube , RUTUBE)', style: TextInputStyle.Paragraph, placeholder: 'https://youtube.com/...' }
+      { id: 'recoil_links', label: 'Откаты стрельбы (YouTube | Rutube)', style: TextInputStyle.Paragraph, placeholder: 'https://youtube.com/...' }
     ];
     modal.addComponents(
       ...fields.map(f =>
