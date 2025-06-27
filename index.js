@@ -247,6 +247,8 @@ client.on('interactionCreate', async (interaction) => {
     
     // Ваши дополнительные условия и логика
     if (interaction.customId.startsWith('call_app:')) {
+  await interaction.deferReply(); // Добавляем задержку на ответ
+
   const targetUserId = interaction.customId.split(':')[1];
   console.log('Обрабатываем обзвон для пользователя с ID:', targetUserId); // Логируем ID пользователя
 
@@ -255,7 +257,7 @@ client.on('interactionCreate', async (interaction) => {
 
   if (!member) {
     console.log('Пользователь не найден в гильдии');
-    return interaction.reply({ content: 'Пользователь не найден', flags: 64 });
+    return interaction.editReply({ content: 'Пользователь не найден', flags: 64 });
   }
 
   console.log('Пользователь найден:', member.user.tag); // Логируем информацию о пользователе
@@ -265,34 +267,31 @@ client.on('interactionCreate', async (interaction) => {
   
   if (!voiceCategory) {
     console.log('Категория для голосовых каналов не найдена!');
-    return interaction.reply({ content: 'Категория для голосовых каналов не найдена.', flags: 64 });
+    return interaction.editReply({ content: 'Категория для голосовых каналов не найдена.', flags: 64 });
   }
 
   const voiceChannels = voiceCategory.children;
   console.log('Найдено голосовых каналов:', voiceChannels.size); // Логируем количество голосовых каналов
 
-  // Проверка, есть ли вообще голосовые каналы
   if (voiceChannels.size === 0) {
     console.log('В категории нет голосовых каналов');
-    return interaction.reply({ content: 'В категории нет голосовых каналов для обзвона.', flags: 64 });
+    return interaction.editReply({ content: 'В категории нет голосовых каналов для обзвона.', flags: 64 });
   }
 
-  // Преобразуем коллекцию в массив и выбираем случайный голосовой канал
-  const randomChannel = Array.from(voiceChannels)[Math.floor(Math.random() * voiceChannels.size)];
+  const randomChannel = voiceChannels.random();
 
   if (!randomChannel) {
     console.log('Не удалось выбрать голосовой канал для обзвона');
-    return interaction.reply({ content: 'Не удалось выбрать голосовой канал для обзвона.', flags: 64 });
+    return interaction.editReply({ content: 'Не удалось выбрать голосовой канал для обзвона.', flags: 64 });
   }
 
   console.log('Выбран канал для обзвона:', randomChannel.name); // Логируем выбранный голосовой канал
 
-  await interaction.reply({
+  await interaction.editReply({
     content: `${member} был вызван на обзвон модератором ${moderator} в канал ${randomChannel.name}.`,
     flags: 64,
   });
 
-  // Личное сообщение пользователю
   await member.send({
     content: `Вы были вызваны на обзвон модератором ${moderator} в канал ${randomChannel.name}. Перейдите по [ссылке](${randomChannel.url}) для подключения.`
   }).catch(() => {});
