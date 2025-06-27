@@ -51,7 +51,7 @@ function createStatusNotificationEmbed(status, applicationName, channelName = ''
   let color;
   let title = '';
   let description = '';
-  
+
   const timeAgo = dayjs().fromNow();
 
   switch (status.toLowerCase()) {
@@ -225,6 +225,11 @@ client.on('interactionCreate', async (interaction) => {
     await interaction.reply({
       content: `Заявка пользователя <@${targetUserId}> взята на рассмотрение модератором ${moderator}`,
       flags: 64,
+    });
+
+    // Отправить личное сообщение с упоминанием
+    await member.send({
+      content: `Здравствуйте, ваша заявка находится на рассмотрении у модератора ${moderator}.`
     });
   }
 
