@@ -18,14 +18,14 @@ const {
   ButtonStyle,
   ChannelType,
   PermissionsBitField,
-  InteractionType
+  InteractionType,
+  StringSelectMenuBuilder
 } = require('discord.js');
 
 const dayjs = require('dayjs');
 const relativeTime = require('dayjs/plugin/relativeTime');
 dayjs.extend(relativeTime);
 
-// Создание клиента Discord
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -37,17 +37,16 @@ const client = new Client({
 
 const CATEGORY_ID = '1200037290538451095';
 const ROLES_ACCESS_IDS = [
-  '1200040982746517595',
-  '1200045928460058768',
-  '1203021666800902184',
-  '1203016198850355231'
+  '1200040982746517595', // роль для High PR
+  '1200045928460058768',  // роль для PR
+  '1203021666800902184',  // роль для High PR
+  '1203016198850355231'   // роль для PR
 ];
 const CHANNEL_ACCEPT_ID = '1386830144789942272';
 const CHANNEL_DECLINE_ID = '1386830559136714825';
 const CHANNEL_LOG_ID = '1304923881294925876';
 const INVITE_CHANNEL_ID = '1387148896320487564';
 
-// --- Функция для создания Embed с уведомлением о статусе ---
 function createStatusNotificationEmbed(status, applicationName, channelName = '', guildId, applicationLink = '') {
   let color;
   let title = '';
@@ -101,7 +100,13 @@ client.once('ready', async () => {
 
   const embed = new EmbedBuilder()
     .setTitle('📋 Заполните форму')
-    .setDescription('Нажмите на кнопку ниже, чтобы оставить заявку.')
+    .setDescription(
+      'Нажмите на кнопку ниже, чтобы оставить заявку.\n\n' +
+      '**Как это работает?**\n' +
+      '1. Нажмите на кнопку **Оставить заявку**.\n' +
+      '2. Заполните все поля формы.\n' +
+      '3. Отправьте форму, и мы рассмотрим вашу заявку в ближайшее время.'
+    )
     .setImage('https://media.discordapp.net/attachments/1300952767078203493/1388174214187581582/ezgif-61741d6e62f365.gif')
     .setColor(0x2f3136);
 
@@ -195,8 +200,28 @@ client.on('interactionCreate', async (interaction) => {
       await interaction.editReply({ content: `✅ Ваша заявка отправлена: ${channel}` });
     } catch (err) {
       console.error('Modal error:', err);
-      await interaction.editReply({ content: '❌ Ошибка при отправке.' }).catch(() => {});
+      if (!interaction.deferred && !interaction.replied) {
+        await interaction.reply({ content: '❌ Ошибка при отправке.', flags: 64 }).catch(() => {});
+      } else {
+        await interaction.editReply({ content: '❌ Ошибка при отправке.' }).catch(() => {});
+      }
     }
+  }
+
+  // --- Обработка кнопки "Принять" с использованием новой функции ---
+  if (interaction.isButton() && interaction.customId.startsWith('accept_app:')) {
+    const targetUserId = interaction.customId.split(':')[1];
+    const guild = interaction.guild;
+    const member = await guild.members.fetch(targetUserId).catch(() => null);
+    if (!member) return interaction.reply({ content: 'Пользователь не найден', ephemeral: true });
+
+    const applicationName = 'G A R C I A';
+    const guildId = guild.id;
+
+    const embed = createStatusNotificationEmbed('принято', applicationName, '', guildId);
+
+    await member.send({ embeds: [embed] }).catch(() => {});
+    await interaction.reply({ content: '✅ Уведомление о принятии отправлено.', ephemeral: true });
   }
 });
 
