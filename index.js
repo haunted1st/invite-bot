@@ -239,85 +239,48 @@ client.on('interactionCreate', async (interaction) => {
     });
   }
 
-  client.on('interactionCreate', async (interaction) => {
-  if (!interaction.isButton()) return;
+  const voiceCategory = await guild.channels.fetch(VOICE_CATEGORY_ID);
 
-  const { customId } = interaction;
-  console.log('Получено взаимодействие с кнопкой:', customId);
+if (!voiceCategory) {
+  console.log('Категория для голосовых каналов не найдена!');
+  return interaction.reply({ content: 'Категория для голосовых каналов не найдена.', flags: 64 });
+}
 
-  // Обработка открытия модала
-  if (customId === 'open_modal') {
-    // Код для открытия модала
-  }
+const voiceChannels = voiceCategory.children.cache; // Используем cache для получения коллекции каналов
+console.log('Найдено голосовых каналов:', voiceChannels.size);
 
-  // Обработка модальных окон
-  if (interaction.type === InteractionType.ModalSubmit && customId === 'application_modal') {
-    // Код для обработки модального окна
-  }
+// Список заранее определенных каналов по их ID
+const selectedChannels = [
+  '1203029383871463444', // Первый канал
+  '1327303833491345419', // Второй канал
+  '1386828355499851806'  // Третий канал
+];
 
-  // Обработка кнопки "Обзвон"
-  if (customId.startsWith('call_app:')) {
-    const targetUserId = customId.split(':')[1];
-    console.log('Обрабатываем обзвон для пользователя с ID:', targetUserId);
+// Фильтруем доступные каналы, чтобы получить только нужные
+const availableChannels = selectedChannels
+  .map(id => voiceChannels.get(id))  // Используем get для получения канала по ID
+  .filter(channel => channel !== undefined);  // Фильтруем undefined значения
 
-    const guild = interaction.guild;
-    const member = await guild.members.fetch(targetUserId).catch(() => null);
-    if (!member) return interaction.reply({ content: 'Пользователь не найден', flags: 64 });
+if (availableChannels.length === 0) {
+  console.log('Не удалось найти доступные выбранные голосовые каналы.');
+  return interaction.reply({ content: 'Не удалось найти доступные выбранные голосовые каналы.', flags: 64 });
+}
 
-    console.log('Пользователь найден:', member.user.tag);
+const randomChannel = availableChannels[Math.floor(Math.random() * availableChannels.length)];
+console.log('Выбран канал для обзвона:', randomChannel.name);
 
-    const moderator = interaction.user;
-    const voiceCategory = await guild.channels.fetch(VOICE_CATEGORY_ID);
-
-    if (!voiceCategory) {
-      console.log('Категория для голосовых каналов не найдена!');
-      return interaction.reply({ content: 'Категория для голосовых каналов не найдена.', flags: 64 });
-    }
-
-    const voiceChannels = voiceCategory.children;
-    console.log('Найдено голосовых каналов:', voiceChannels.size);
-
-    const selectedChannels = [
-      '1203029383871463444',
-      '1327303833491345419',
-      '1386828355499851806'
-    ];
-
-    const availableChannels = selectedChannels
-      .map(id => voiceChannels.find(channel => channel.id === id))  // Используем find для поиска по ID
-      .filter(channel => channel !== undefined);  // Фильтруем undefined значения
-
-    if (availableChannels.length === 0) {
-      console.log('Не удалось найти доступные выбранные голосовые каналы.');
-      return interaction.reply({ content: 'Не удалось найти доступные выбранные голосовые каналы.', flags: 64 });
-    }
-
-    const randomChannel = availableChannels[Math.floor(Math.random() * availableChannels.length)];
-    console.log('Выбран канал для обзвона:', randomChannel.name);
-
-    await interaction.reply({
-      content: `${member} был вызван на обзвон модератором ${moderator} в канал ${randomChannel.name}.`,
-      flags: 64,
-    });
-
-    try {
-      await member.send({
-        content: `Вы были вызваны на обзвон модератором ${moderator} в канал ${randomChannel.name}. Перейдите по [ссылке](${randomChannel.url}) для подключения.`
-      });
-    } catch (error) {
-      console.log('Ошибка при отправке личного сообщения:', error);
-    }
-  }
-
-  // Обработка других кнопок (принять, отклонить и т.д.)
-  if (customId.startsWith('accept_app:')) {
-    // Обработка кнопки "Принять"
-  }
-
-  if (customId.startsWith('decline_app:')) {
-    // Обработка кнопки "Отклонить"
-  }
+await interaction.reply({
+  content: `${member} был вызван на обзвон модератором ${moderator} в канал ${randomChannel.name}.`,
+  flags: 64,
 });
+
+try {
+  await member.send({
+    content: `Вы были вызваны на обзвон модератором ${moderator} в канал ${randomChannel.name}. Перейдите по [ссылке](${randomChannel.url}) для подключения.`
+  });
+} catch (error) {
+  console.log('Ошибка при отправке личного сообщения:', error);
+}
 
   // Обработка кнопки "Принять"
   if (interaction.isButton() && interaction.customId.startsWith('accept_app:')) {
