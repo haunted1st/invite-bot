@@ -242,6 +242,7 @@ client.on('interactionCreate', async (interaction) => {
   client.on('interactionCreate', async (interaction) => {
   console.log('Взаимодействие с кнопкой:', interaction.customId); // Логируем ID нажатой кнопки
 
+  client.on('interactionCreate', async (interaction) => {
   if (interaction.isButton() && interaction.customId.startsWith('call_app:')) {
     const targetUserId = interaction.customId.split(':')[1];
     console.log('Обрабатываем обзвон для пользователя с ID:', targetUserId); // Логируем ID пользователя
@@ -259,7 +260,7 @@ client.on('interactionCreate', async (interaction) => {
     const moderator = interaction.user;
     const voiceCategory = await guild.channels.fetch(VOICE_CATEGORY_ID);
     const voiceChannels = voiceCategory.children;
-    const randomChannel = voiceChannels.random();
+    const randomChannel = Array.from(voiceChannels).random(); // Получаем случайный канал
 
     if (!randomChannel) {
       console.log('Не удалось найти голосовой канал для обзвона');
@@ -275,7 +276,7 @@ client.on('interactionCreate', async (interaction) => {
 
     // Личное сообщение пользователю
     await member.send({
-      content: `Вы были вызваны на обзвон модератором ${moderator} в канал ${randomChannel}.`
+      content: `Вы были вызваны на обзвон модератором ${moderator} в канал ${randomChannel}. Перейдите по [ссылке](${randomChannel.url}) для подключения.`
     }).catch(() => {});
   }
 });
