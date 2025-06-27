@@ -47,16 +47,17 @@ const CHANNEL_DECLINE_ID = '1386830559136714825';
 const CHANNEL_LOG_ID = '1304923881294925876';
 const INVITE_CHANNEL_ID = '1387148896320487564';
 
+// --- Добавлена универсальная функция для создания embed с цветом и текстом по статусу ---
 function createStatusNotificationEmbed(status, applicationName, channelName = '', guildId, applicationLink = '') {
   let color;
   let title = '';
   let description = '';
   
-  const timeAgo = dayjs().fromNow();
-
+  const timeAgo = dayjs().fromNow(); // Пример: "17 hours ago"
+  
   switch (status.toLowerCase()) {
     case 'рассмотрение':
-      color = 0xf1c40f;
+      color = 0xf1c40f; // жёлтый
       title = 'Рассмотрение заявки';
       description = `Ваша заявка в **${applicationName}** взята на рассмотрение!\n\n` +
                     `Ссылка на заявку: ${applicationLink || '⁠' + applicationName + '⁠unknown'}\n` +
@@ -64,7 +65,7 @@ function createStatusNotificationEmbed(status, applicationName, channelName = ''
                     `Дата события: ${timeAgo}`;
       break;
     case 'обзвон':
-      color = 0x3498db;
+      color = 0x3498db; // синий
       title = 'Приглашение на обзвон';
       description = `Вы были вызваны на обзвон!\n\n` +
                     `Вас приглашают присоединиться к голосовому каналу: **${applicationName}** ${channelName}\n` +
@@ -72,21 +73,21 @@ function createStatusNotificationEmbed(status, applicationName, channelName = ''
                     `Дата события: ${timeAgo}`;
       break;
     case 'принято':
-      color = 0x2ecc71;
+      color = 0x2ecc71; // зелёный
       title = 'Заявка принята';
       description = `Ваша заявка в **${applicationName}** успешно принята!\n\n` +
                     `ID Дискорд сервера: ${guildId}\n` +
                     `Дата события: ${timeAgo}`;
       break;
     case 'отклонено':
-      color = 0xe74c3c;
+      color = 0xe74c3c; // красный
       title = 'Заявка отклонена';
       description = `К сожалению, ваша заявка в **${applicationName}** была отклонена.\n\n` +
                     `ID Дискорд сервера: ${guildId}\n` +
                     `Дата события: ${timeAgo}`;
       break;
     default:
-      color = 0x2f3136;
+      color = 0x2f3136; // серый
       title = 'Статус заявки обновлён';
       description = `Статус заявки **${applicationName}** изменён.\n\n` +
                     `ID Дискорд сервера: ${guildId}\n` +
@@ -110,24 +111,16 @@ client.once('ready', async () => {
   const botMessage = messages.find(m => m.author.id === client.user.id);
   if (botMessage) await botMessage.delete().catch(() => {});
 
-  const embedTop = new EmbedBuilder()
+  const embed = new EmbedBuilder()
     .setTitle('📋 Заполните форму')
     .setDescription(
       'Нажмите на кнопку ниже, чтобы оставить заявку.\n\n' +
       '**Как это работает?**\n' +
-      '1. Нажмите на кнопку **Оставить заявку**.'
-    )
-    .setColor(0x2f3136);
-
-  const embedGif = new EmbedBuilder()
-    .setImage('https://media.discordapp.net/attachments/1300952767078203493/1388174214187581582/ezgif-61741d6e62f365.gif')
-    .setColor(0x2f3136);
-
-  const embedBottom = new EmbedBuilder()
-    .setDescription(
+      '1. Нажмите на кнопку **Оставить заявку**.\n' +
       '2. Заполните все поля формы.\n' +
       '3. Отправьте форму, и мы рассмотрим вашу заявку в ближайшее время.'
     )
+    .setImage('https://media.discordapp.net/attachments/1300952767078203493/1388174214187581582/ezgif-61741d6e62f365.gif')
     .setColor(0x2f3136);
 
   const button = new ButtonBuilder()
@@ -136,8 +129,7 @@ client.once('ready', async () => {
     .setStyle(ButtonStyle.Primary);
 
   const row = new ActionRowBuilder().addComponents(button);
-
-  await inviteChannel.send({ embeds: [embedTop, embedGif, embedBottom], components: [row] });
+  await inviteChannel.send({ embeds: [embed], components: [row] });
 });
 
 client.on('interactionCreate', async (interaction) => {
