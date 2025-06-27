@@ -162,7 +162,7 @@ client.on('interactionCreate', async (interaction) => {
       const overwrites = [
         { id: guild.roles.everyone, deny: [PermissionsBitField.Flags.ViewChannel] },
         { id: user.id, allow: [PermissionsBitField.Flags.ViewChannel] },
-        ...ROLES_ACCESS_IDS.map(roleId => ({ id: roleId, allow: [PermissionsBitField.Flags.ViewChannel] })), 
+        ...ROLES_ACCESS_IDS.map(roleId => ({ id: roleId, allow: [PermissionsBitField.Flags.ViewChannel] })),
       ];
 
       const channel = await guild.channels.create({
@@ -186,20 +186,21 @@ client.on('interactionCreate', async (interaction) => {
         .setColor(0xf1c40f)
         .setTimestamp();
 
-    const buttons = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId(`accept_app:${user.id}`).setLabel('Принять').setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId(`review_app:${user.id}`).setLabel('Рассмотрение').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId(`call_app:${user.id}`).setLabel('Обзвон').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId(`decline_app:${user.id}`).setLabel('Отклонить').setStyle(ButtonStyle.Danger)
-    );
+      const buttons = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`accept_app:${user.id}`).setLabel('Принять').setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId(`review_app:${user.id}`).setLabel('Рассмотрение').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId(`call_app:${user.id}`).setLabel('Обзвон').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId(`decline_app:${user.id}`).setLabel('Отклонить').setStyle(ButtonStyle.Danger)
+      );
 
-    console.log('Отправляем кнопки в канал заявки:', channelName); // Логируем название канала
+      console.log('Отправляем кнопки в канал заявки:', channelName); // Логируем название канала
 
-    await channel.send({
-     content: ROLES_ACCESS_IDS.map(id => `<@&${id}>`).join(' '),
-     embeds: [embed],
-     components: [buttons]
-    });
+      await channel.send({
+        content: ROLES_ACCESS_IDS.map(id => `<@&${id}>`).join(' '),
+        embeds: [embed],
+        components: [buttons]
+      });
+
       await interaction.editReply({ content: `✅ Ваша заявка отправлена: ${channel}`, flags: 64 });
     } catch (err) {
       console.error('Modal error:', err);
@@ -239,48 +240,49 @@ client.on('interactionCreate', async (interaction) => {
     });
   }
 
+  // Получаем голосовые каналы из категории
   const voiceCategory = await guild.channels.fetch(VOICE_CATEGORY_ID);
 
-if (!voiceCategory) {
-  console.log('Категория для голосовых каналов не найдена!');
-  return interaction.reply({ content: 'Категория для голосовых каналов не найдена.', flags: 64 });
-}
+  if (!voiceCategory) {
+    console.log('Категория для голосовых каналов не найдена!');
+    return interaction.reply({ content: 'Категория для голосовых каналов не найдена.', flags: 64 });
+  }
 
-const voiceChannels = voiceCategory.children.cache; // Используем cache для получения коллекции каналов
-console.log('Найдено голосовых каналов:', voiceChannels.size);
+  const voiceChannels = voiceCategory.children.cache; // Используем cache для получения коллекции каналов
+  console.log('Найдено голосовых каналов:', voiceChannels.size);
 
-// Список заранее определенных каналов по их ID
-const selectedChannels = [
-  '1203029383871463444', // Первый канал
-  '1327303833491345419', // Второй канал
-  '1386828355499851806'  // Третий канал
-];
+  // Список заранее определенных каналов по их ID
+  const selectedChannels = [
+    '1203029383871463444', // Первый канал
+    '1327303833491345419', // Второй канал
+    '1386828355499851806'  // Третий канал
+  ];
 
-// Фильтруем доступные каналы, чтобы получить только нужные
-const availableChannels = selectedChannels
-  .map(id => voiceChannels.get(id))  // Используем get для получения канала по ID
-  .filter(channel => channel !== undefined);  // Фильтруем undefined значения
+  // Фильтруем доступные каналы, чтобы получить только нужные
+  const availableChannels = selectedChannels
+    .map(id => voiceChannels.get(id))  // Используем get для получения канала по ID
+    .filter(channel => channel !== undefined);  // Фильтруем undefined значения
 
-if (availableChannels.length === 0) {
-  console.log('Не удалось найти доступные выбранные голосовые каналы.');
-  return interaction.reply({ content: 'Не удалось найти доступные выбранные голосовые каналы.', flags: 64 });
-}
+  if (availableChannels.length === 0) {
+    console.log('Не удалось найти доступные выбранные голосовые каналы.');
+    return interaction.reply({ content: 'Не удалось найти доступные выбранные голосовые каналы.', flags: 64 });
+  }
 
-const randomChannel = availableChannels[Math.floor(Math.random() * availableChannels.length)];
-console.log('Выбран канал для обзвона:', randomChannel.name);
+  const randomChannel = availableChannels[Math.floor(Math.random() * availableChannels.length)];
+  console.log('Выбран канал для обзвона:', randomChannel.name);
 
-await interaction.reply({
-  content: `${member} был вызван на обзвон модератором ${moderator} в канал ${randomChannel.name}.`,
-  flags: 64,
-});
-
-try {
-  await member.send({
-    content: `Вы были вызваны на обзвон модератором ${moderator} в канал ${randomChannel.name}. Перейдите по [ссылке](${randomChannel.url}) для подключения.`
+  await interaction.reply({
+    content: `${member} был вызван на обзвон модератором ${moderator} в канал ${randomChannel.name}.`,
+    flags: 64,
   });
-} catch (error) {
-  console.log('Ошибка при отправке личного сообщения:', error);
-}
+
+  try {
+    await member.send({
+      content: `Вы были вызваны на обзвон модератором ${moderator} в канал ${randomChannel.name}. Перейдите по [ссылке](${randomChannel.url}) для подключения.`
+    });
+  } catch (error) {
+    console.log('Ошибка при отправке личного сообщения:', error);
+  }
 
   // Обработка кнопки "Принять"
   if (interaction.isButton() && interaction.customId.startsWith('accept_app:')) {
