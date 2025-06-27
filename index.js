@@ -210,11 +210,11 @@ client.on('interactionCreate', async (interaction) => {
 
       await interaction.editReply({ content: `✅ Ваша заявка отправлена: ${channel}` });
     } catch (err) {
-      console.error('Modal error:', err);
-      if (!interaction.deferred && !interaction.replied) {
-        await interaction.reply({ content: '❌ Ошибка при отправке.', flags: 64 }).catch(() => {});
-      } else {
-        await interaction.editReply({ content: '❌ Ошибка при отправке.' }).catch(() => {});
+  console.error('Modal error:', err);
+  if (!interaction.deferred && !interaction.replied) {
+    await interaction.reply({ content: '❌ Ошибка при отправке.', flags: 64 }).catch(() => {});
+  } else {
+    await interaction.editReply({ content: '❌ Ошибка при отправке.' }).catch(() => {});
       }
     }
   }
