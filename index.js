@@ -276,12 +276,12 @@ client.on('interactionCreate', async (interaction) => {
         return interaction.editReply({ content: 'В категории нет голосовых каналов для обзвона.', flags: 64 });
       }
 
-      const randomChannel = voiceChannels.random();
+      const randomChannel = Array.from(voiceChannels)[Math.floor(Math.random() * voiceChannels.size)];
 
-      if (!randomChannel) {
-        console.log('Не удалось выбрать голосовой канал для обзвона');
-        return interaction.editReply({ content: 'Не удалось выбрать голосовой канал для обзвона.', flags: 64 });
-      }
+if (!randomChannel) {
+  console.log('Не удалось выбрать голосовой канал для обзвона');
+  return interaction.editReply({ content: 'Не удалось выбрать голосовой канал для обзвона.', flags: 64 });
+}
 
       console.log('Выбран канал для обзвона:', randomChannel.name); // Логируем выбранный голосовой канал
 
