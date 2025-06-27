@@ -179,24 +179,32 @@ client.on('interactionCreate', async (interaction) => {
       channelName = channelName.replace(/[^a-z0-9\-а-я]/gi, '-').replace(/-+/g, '-').slice(0, 90);
 
       const overwrites = [
-        { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
-        { id: user.id, allow: [PermissionsBitField.Flags.ViewChannel] },
-        ...ROLES_ACCESS_IDS.map(roleId => ({ id: roleId, allow: [PermissionsBitField.Flags.ViewChannel] }))
-      ];
+  { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+  { id: user.id, allow: [PermissionsBitField.Flags.ViewChannel] },
+  ...ROLES_ACCESS_IDS.map(roleId => {
+    const role = guild.roles.cache.get(roleId);
+    if (!role) {
+      console.error(`❌ Роль с ID ${roleId} не найдена`);
+      return null; // Игнорируем недействительные роли
+    }
+    return { id: role.id, allow: [PermissionsBitField.Flags.ViewChannel] };
+  }).filter(Boolean) // Убираем `null` из массива
+];
 
-      const channel = await guild.channels.create({
-        name: channelName,
-        type: ChannelType.GuildText,
-        parent: CATEGORY_ID,
-        permissionOverwrites: overwrites
-      }).catch(err => {
-        console.error('❌ Ошибка при создании канала:', err);
-      });
+// Пытаемся создать канал
+const channel = await guild.channels.create({
+  name: channelName,
+  type: ChannelType.GuildText,
+  parent: CATEGORY_ID,
+  permissionOverwrites: overwrites
+}).catch(err => {
+  console.error('❌ Ошибка при создании канала:', err);
+});
 
-      if (!channel) {
-        console.error('❌ Канал не был создан');
-        return interaction.editReply({ content: '❌ Не удалось создать канал.' });
-      }
+if (!channel) {
+  console.error('❌ Канал не был создан');
+  return interaction.editReply({ content: '❌ Не удалось создать канал.' });
+}
 
       const embed = new EmbedBuilder()
         .setTitle('📨 Заявка')
