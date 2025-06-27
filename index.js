@@ -281,8 +281,8 @@ client.on('interactionCreate', async (interaction) => {
 
     // Фильтруем доступные каналы, чтобы получить только нужные
     const availableChannels = selectedChannels
-      .map(id => voiceChannels.find(channel => channel.id === id)) // Используем find для поиска канала по ID
-      .filter(channel => channel !== undefined);
+      .map(id => voiceChannels.get(id))  // Используем get для получения канала по ID
+      .filter(channel => channel !== undefined);  // Фильтруем undefined значения
 
     if (availableChannels.length === 0) {
       console.log('Не удалось найти доступные выбранные голосовые каналы.');
