@@ -37,8 +37,10 @@ const client = new Client({
 
 const CATEGORY_ID = '1200037290538451095';
 const ROLES_ACCESS_IDS = [
-  '1203021666800902184', // High PR
-  '1203016198850355231'  // PR
+  '1200040982746517595',
+  '1200045928460058768',
+  '1203021666800902184',
+  '1203016198850355231'
 ];
 const CHANNEL_ACCEPT_ID = '1386830144789942272';
 const CHANNEL_DECLINE_ID = '1386830559136714825';
@@ -155,39 +157,89 @@ client.on('interactionCreate', async (interaction) => {
     return interaction.showModal(modal);
   }
 
-  // Обработка кнопки "Принять"
-  if (interaction.isButton() && interaction.customId.startsWith('accept_app:')) {
-    const targetUserId = interaction.customId.split(':')[1];  // Извлекаем ID пользователя
-    const guild = interaction.guild;
-    const member = await guild.members.fetch(targetUserId).catch(() => null);
-    if (!member) return interaction.reply({ content: 'Пользователь не найден', ephemeral: true });
+  if (interaction.type === InteractionType.ModalSubmit && interaction.customId === 'application_modal') {
+    try {
+      await interaction.deferReply({ ephemeral: true });
 
-    const applicationName = 'G A R C I A';
-    const guildId = guild.id;
-    const applicationLink = '';  // Передай ссылку на заявку, если есть
+      const user = interaction.user;
+      const guild = interaction.guild;
+      const nicknameStat = interaction.fields.getTextInputValue('nickname_stat');
+      const irl = interaction.fields.getTextInputValue('irl_name_age');
+      const history = interaction.fields.getTextInputValue('family_history');
+      const servers = interaction.fields.getTextInputValue('servers');
+      const recoil = interaction.fields.getTextInputValue('recoil_links');
 
-    const embed = createStatusNotificationEmbed('принято', applicationName, '', guildId, applicationLink);
-    await member.send({ embeds: [embed] }).catch(() => {});
-    await interaction.reply({ content: '✅ Заявка принята.', ephemeral: true });
+      const channelName = `заявка-${user.username}`.toLowerCase().replace(/[^a-z0-9\-а-я]/gi, '-');
+      const overwrites = [
+        { id: guild.roles.everyone, deny: [PermissionsBitField.Flags.ViewChannel] },
+        { id: user.id, allow: [PermissionsBitField.Flags.ViewChannel] },
+        ...ROLES_ACCESS_IDS.map(roleId => ({ id: roleId, allow: [PermissionsBitField.Flags.ViewChannel] }))
+      ];
+
+      const channel = await guild.channels.create({
+        name: channelName,
+        type: ChannelType.GuildText,
+        parent: CATEGORY_ID,
+        permissionOverwrites: overwrites
+      });
+
+      const embed = new EmbedBuilder()
+  .setTitle('📨 Заявка')
+  .addFields(
+    { name: 'Никнейм и статик', value: nicknameStat },
+    { name: 'IRL имя и возраст', value: irl },
+    { name: 'Семьи ранее', value: history },
+    { name: 'Сервера', value: servers },
+    { name: 'Откаты стрельбы', value: recoil },
+    { name: 'Пользователь', value: `<@${user.id}>` }
+  )
+  .setFooter({ text: `ID: ${user.id}` })
+  .setColor(0xf1c40f)
+  .setTimestamp();
+
+      const buttons = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`accept_app:${user.id}`).setLabel('Принять').setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId(`review_app:${user.id}`).setLabel('Рассмотрение').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId(`call_app:${user.id}`).setLabel('Обзвон').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId(`decline_app:${user.id}`).setLabel('Отклонить').setStyle(ButtonStyle.Danger)
+      );
+
+      await channel.send({
+        content: ROLES_ACCESS_IDS.map(id => `<@&${id}>`).join(' '),
+        embeds: [embed],
+        components: [buttons]
+      });
+
+      await interaction.editReply({ content: `✅ Ваша заявка отправлена: ${channel}` });
+    } catch (err) {
+      console.error('Modal error:', err);
+      if (!interaction.deferred && !interaction.replied) {
+        await interaction.reply({ content: '❌ Ошибка при отправке.', flags: 64 }).catch(() => {});
+      } else {
+        await interaction.editReply({ content: '❌ Ошибка при отправке.' }).catch(() => {});
+      }
+    }
   }
 
-  // Обработка кнопки "Рассмотрение"
+  // --- Обработка кнопки "Рассмотрение" с использованием новой функции ---
   if (interaction.isButton() && interaction.customId.startsWith('review_app:')) {
     const targetUserId = interaction.customId.split(':')[1];
     const guild = interaction.guild;
     const member = await guild.members.fetch(targetUserId).catch(() => null);
     if (!member) return interaction.reply({ content: 'Пользователь не найден', ephemeral: true });
 
+    // Здесь можно динамически получить название заявки из твоих данных, пока пример с константой:
     const applicationName = 'G A R C I A';
     const guildId = guild.id;
     const applicationLink = ''; // Можно передать ссылку на заявку, если есть
 
     const embed = createStatusNotificationEmbed('рассмотрение', applicationName, '', guildId, applicationLink);
+
     await member.send({ embeds: [embed] }).catch(() => {});
     await interaction.reply({ content: '✅ Уведомление о рассмотрении отправлено.', ephemeral: true });
   }
 
-  // Обработка кнопки "Обзвон"
+  // --- Обработка кнопки "Обзвон" с использованием новой функции ---
   if (interaction.isButton() && interaction.customId.startsWith('call_app:')) {
     const targetUserId = interaction.customId.split(':')[1];
     const guild = interaction.guild;
@@ -199,11 +251,12 @@ client.on('interactionCreate', async (interaction) => {
     const guildId = guild.id;
 
     const embed = createStatusNotificationEmbed('обзвон', applicationName, channelName, guildId);
+
     await member.send({ embeds: [embed] }).catch(() => {});
     await interaction.reply({ content: '✅ Уведомление об обзвоне отправлено.', ephemeral: true });
   }
 
-  // Обработка кнопки "Отклонить"
+  // Остальной код (отклонение, обзвон с селектом и т.п.) без изменений
   if (interaction.isButton() && interaction.customId.includes('decline_app')) {
     const [action, targetUserId] = interaction.customId.split(':');
     const modal = new ModalBuilder()
@@ -222,8 +275,7 @@ client.on('interactionCreate', async (interaction) => {
 
     return interaction.showModal(modal);
   }
-  
-  // Обработка submit модального окна для отказа
+
   if (interaction.type === InteractionType.ModalSubmit && interaction.customId.startsWith('decline_modal:')) {
     const targetUserId = interaction.customId.split(':')[1];
     const reason = interaction.fields.getTextInputValue('decline_reason');
@@ -262,14 +314,12 @@ client.on('interactionCreate', async (interaction) => {
         .setTitle('❌ Ваша заявка отклонена')
         .setDescription(`К сожалению, ваша заявка была отклонена.\n**Причина:** ${reason}`)
         .setColor('Red')]
-
     }).catch(() => {});
 
     await interaction.reply({ content: '❌ Заявка отклонена с указанием причины.', ephemeral: true });
     setTimeout(() => appChannel.delete().catch(() => {}), 1000);
   }
 
-  // Обработка SelectMenu для обзвона
   if (interaction.isStringSelectMenu()) {
     const [action, targetUserId] = interaction.customId.split(':');
     if (action !== 'call_select') return;
@@ -284,7 +334,6 @@ client.on('interactionCreate', async (interaction) => {
         .setTitle('📞 Вызов на обзвон')
         .setDescription(`Вы вызваны на **обзвон** модератором <@${interaction.user.id}> в канал **${selectedChannel.name}**.`)
         .setColor('Blurple')]
-
     }).catch(() => {});
     await interaction.update({ content: '📞 Обзвон назначен.', components: [] });
   }
