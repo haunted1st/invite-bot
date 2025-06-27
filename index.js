@@ -156,87 +156,87 @@ client.on('interactionCreate', async (interaction) => {
   }
 
   if (interaction.type === InteractionType.ModalSubmit && interaction.customId === 'application_modal') {
-  console.log('📥 Обработка ModalSubmit началась');
+    console.log('📥 Обработка ModalSubmit началась');
 
-  try {
-    await interaction.deferReply({ ephemeral: true });
+    try {
+      await interaction.deferReply({ ephemeral: true });
 
-    const user = interaction.user;
-    const guild = interaction.guild;
+      const user = interaction.user;
+      const guild = interaction.guild;
 
-    if (!guild) {
-      console.error('❌ Guild не найден в ModalSubmit');
-      return interaction.editReply({ content: '❌ Ошибка: команда доступна только на сервере.', ephemeral: true });
-    }
+      if (!guild) {
+        console.error('❌ Guild не найден в ModalSubmit');
+        return interaction.editReply({ content: '❌ Ошибка: команда доступна только на сервере.', ephemeral: true });
+      }
 
-    const nicknameStat = interaction.fields.getTextInputValue('nickname_stat');
-    const irl = interaction.fields.getTextInputValue('irl_name_age');
-    const history = interaction.fields.getTextInputValue('family_history');
-    const servers = interaction.fields.getTextInputValue('servers');
-    const recoil = interaction.fields.getTextInputValue('recoil_links');
+      const nicknameStat = interaction.fields.getTextInputValue('nickname_stat');
+      const irl = interaction.fields.getTextInputValue('irl_name_age');
+      const history = interaction.fields.getTextInputValue('family_history');
+      const servers = interaction.fields.getTextInputValue('servers');
+      const recoil = interaction.fields.getTextInputValue('recoil_links');
 
-    let channelName = `заявка-${user.username.toLowerCase()}`;
-    channelName = channelName.replace(/[^a-z0-9\-а-я]/gi, '-').replace(/-+/g, '-').slice(0, 90);
+      let channelName = `заявка-${user.username.toLowerCase()}`;
+      channelName = channelName.replace(/[^a-z0-9\-а-я]/gi, '-').replace(/-+/g, '-').slice(0, 90);
 
-    const overwrites = [
-      { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
-      { id: user.id, allow: [PermissionsBitField.Flags.ViewChannel] },
-      ...ROLES_ACCESS_IDS.map(roleId => ({ id: roleId, allow: [PermissionsBitField.Flags.ViewChannel] }))
-    ];
+      const overwrites = [
+        { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+        { id: user.id, allow: [PermissionsBitField.Flags.ViewChannel] },
+        ...ROLES_ACCESS_IDS.map(roleId => ({ id: roleId, allow: [PermissionsBitField.Flags.ViewChannel] }))
+      ];
 
-    const channel = await guild.channels.create({
-      name: channelName,
-      type: ChannelType.GuildText,
-      parent: CATEGORY_ID,
-      permissionOverwrites: overwrites
-    }).catch(err => {
-      console.error('❌ Ошибка при создании канала:', err);
-    });
+      const channel = await guild.channels.create({
+        name: channelName,
+        type: ChannelType.GuildText,
+        parent: CATEGORY_ID,
+        permissionOverwrites: overwrites
+      }).catch(err => {
+        console.error('❌ Ошибка при создании канала:', err);
+      });
 
-    if (!channel) {
-      console.error('❌ Канал не был создан');
-      return interaction.editReply({ content: '❌ Не удалось создать канал.' });
-    }
+      if (!channel) {
+        console.error('❌ Канал не был создан');
+        return interaction.editReply({ content: '❌ Не удалось создать канал.' });
+      }
 
-    const embed = new EmbedBuilder()
-      .setTitle('📨 Заявка')
-      .addFields(
-        { name: 'Никнейм и статик', value: nicknameStat },
-        { name: 'IRL имя и возраст', value: irl },
-        { name: 'Семьи ранее', value: history },
-        { name: 'Сервера', value: servers },
-        { name: 'Откаты стрельбы', value: recoil },
-        { name: 'Пользователь', value: `<@${user.id}>` }
-      )
-      .setFooter({ text: `ID: ${user.id}` })
-      .setColor(0xf1c40f)
-      .setTimestamp();
+      const embed = new EmbedBuilder()
+        .setTitle('📨 Заявка')
+        .addFields(
+          { name: 'Никнейм и статик', value: nicknameStat },
+          { name: 'IRL имя и возраст', value: irl },
+          { name: 'Семьи ранее', value: history },
+          { name: 'Сервера', value: servers },
+          { name: 'Откаты стрельбы', value: recoil },
+          { name: 'Пользователь', value: `<@${user.id}>` }
+        )
+        .setFooter({ text: `ID: ${user.id}` })
+        .setColor(0xf1c40f)
+        .setTimestamp();
 
-    const buttons = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId(`accept_app:${user.id}`).setLabel('Принять').setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId(`review_app:${user.id}`).setLabel('Рассмотрение').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId(`call_app:${user.id}`).setLabel('Обзвон').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId(`decline_app:${user.id}`).setLabel('Отклонить').setStyle(ButtonStyle.Danger)
-    );
+      const buttons = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`accept_app:${user.id}`).setLabel('Принять').setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId(`review_app:${user.id}`).setLabel('Рассмотрение').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId(`call_app:${user.id}`).setLabel('Обзвон').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId(`decline_app:${user.id}`).setLabel('Отклонить').setStyle(ButtonStyle.Danger)
+      );
 
-    await channel.send({
-      content: ROLES_ACCESS_IDS.map(id => `<@&${id}>`).join(' '),
-      embeds: [embed],
-      components: [buttons]
-    }).catch(err => {
-      console.error('❌ Ошибка при отправке embed и кнопок:', err);
-    });
+      await channel.send({
+        content: ROLES_ACCESS_IDS.map(id => `<@&${id}>`).join(' '),
+        embeds: [embed],
+        components: [buttons]
+      }).catch(err => {
+        console.error('❌ Ошибка при отправке embed и кнопок:', err);
+      });
 
-    await interaction.editReply({ content: `✅ Ваша заявка отправлена: ${channel}` });
-  } catch (err) {
-    console.error('❌ Ошибка в обработке ModalSubmit:', err);
-    if (!interaction.deferred && !interaction.replied) {
-      await interaction.reply({ content: '❌ Ошибка при отправке.', ephemeral: true }).catch(() => {});
-    } else {
-      await interaction.editReply({ content: '❌ Ошибка при отправке.' }).catch(() => {});
+      await interaction.editReply({ content: `✅ Ваша заявка отправлена: ${channel}` });
+    } catch (err) {
+      console.error('❌ Ошибка в обработке ModalSubmit:', err);
+      if (!interaction.deferred && !interaction.replied) {
+        await interaction.reply({ content: '❌ Ошибка при отправке.', ephemeral: true }).catch(() => {});
+      } else {
+        await interaction.editReply({ content: '❌ Ошибка при отправке.' }).catch(() => {});
+      }
     }
   }
-}
 
   // --- Обработка кнопки "Рассмотрение" с использованием новой функции ---
   if (interaction.isButton() && interaction.customId.startsWith('review_app:')) {
