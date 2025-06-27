@@ -36,12 +36,6 @@ const client = new Client({
 });
 
 const CATEGORY_ID = '1200037290538451095';
-const VOICE_CATEGORY_ID = '1203018614253555812';
-const VOICE_CHANNELS = [
-  '1203029383871463444',
-  '1327303833491345419',
-  '1386828355499851806'
-];
 const ROLES_ACCESS_IDS = [
   '1203016198850355231', // роль для High PR
   '1203021666800902184',  // роль для PR
@@ -50,6 +44,7 @@ const CHANNEL_ACCEPT_ID = '1386830144789942272'; // Канал для приня
 const CHANNEL_DECLINE_ID = '1386830559136714825'; // Канал для отклонения заявок
 const CHANNEL_LOG_ID = '1304923881294925876'; // Канал логов
 const INVITE_CHANNEL_ID = '1387148896320487564'; // Канал приглашений
+const VOICE_CATEGORY_ID = '1203018614253555812'; // ID категории для голосовых каналов
 
 // Функция создания уведомления о статусе заявки
 function createStatusNotificationEmbed(status, applicationName, channelName = '', guildId, applicationLink = '') {
@@ -153,7 +148,7 @@ client.on('interactionCreate', async (interaction) => {
 
   if (interaction.type === InteractionType.ModalSubmit && interaction.customId === 'application_modal') {
     try {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: 64 });
 
       const user = interaction.user;
       const guild = interaction.guild;
@@ -204,7 +199,7 @@ client.on('interactionCreate', async (interaction) => {
         components: [buttons]
       });
 
-      await interaction.editReply({ content: `✅ Ваша заявка отправлена: ${channel}` });
+      await interaction.editReply({ content: `✅ Ваша заявка отправлена: ${channel}`, flags: 64 });
     } catch (err) {
       console.error('Modal error:', err);
       if (!interaction.deferred && !interaction.replied) {
@@ -220,23 +215,17 @@ client.on('interactionCreate', async (interaction) => {
     const targetUserId = interaction.customId.split(':')[1];
     const guild = interaction.guild;
     const member = await guild.members.fetch(targetUserId).catch(() => null);
-    if (!member) return interaction.reply({ content: 'Пользователь не найден', ephemeral: true });
+    if (!member) return interaction.reply({ content: 'Пользователь не найден', flags: 64 });
 
     const moderator = interaction.user;
 
     const logChannel = await client.channels.fetch(CHANNEL_LOG_ID);
     await logChannel.send(`${moderator} взял заявку пользователя <@${targetUserId}> на рассмотрение.`);
 
-    // Отправляем сообщение с упоминанием модератора
     await interaction.reply({
       content: `Заявка пользователя <@${targetUserId}> взята на рассмотрение модератором ${moderator}`,
-      ephemeral: true,
+      flags: 64,
     });
-
-    // Личное сообщение пользователю
-    await member.send({
-      content: `Ваша заявка была взята на рассмотрение модератором ${moderator}.`
-    }).catch(() => {});
   }
 
   // Обработка кнопки "Обзвон"
@@ -244,21 +233,25 @@ client.on('interactionCreate', async (interaction) => {
     const targetUserId = interaction.customId.split(':')[1];
     const guild = interaction.guild;
     const member = await guild.members.fetch(targetUserId).catch(() => null);
-    if (!member) return interaction.reply({ content: 'Пользователь не найден', ephemeral: true });
+    if (!member) return interaction.reply({ content: 'Пользователь не найден', flags: 64 });
 
     const moderator = interaction.user;
-
     const voiceCategory = await guild.channels.fetch(VOICE_CATEGORY_ID);
-    const voiceChannel = voiceCategory.children.random(); // Выбираем случайный голосовой канал
+    const voiceChannels = voiceCategory.children;
+    const randomChannel = voiceChannels.random();
+
+    if (!randomChannel) {
+      return interaction.reply({ content: 'Не удалось найти доступные голосовые каналы для обзвона.', flags: 64 });
+    }
 
     await interaction.reply({
-      content: `${member} был вызван на обзвон модератором ${moderator} в канал ${voiceChannel}.`,
-      ephemeral: true,
+      content: `${member} был вызван на обзвон модератором ${moderator} в канал ${randomChannel}.`,
+      flags: 64,
     });
 
     // Личное сообщение пользователю
     await member.send({
-      content: `Вы были вызваны на обзвон модератором ${moderator} в канал ${voiceChannel}.`
+      content: `Вы были вызваны на обзвон модератором ${moderator} в канал ${randomChannel}.`
     }).catch(() => {});
   }
 
@@ -267,7 +260,7 @@ client.on('interactionCreate', async (interaction) => {
     const targetUserId = interaction.customId.split(':')[1];
     const guild = interaction.guild;
     const member = await guild.members.fetch(targetUserId).catch(() => null);
-    if (!member) return interaction.reply({ content: 'Пользователь не найден', ephemeral: true });
+    if (!member) return interaction.reply({ content: 'Пользователь не найден', flags: 64 });
 
     const applicationName = 'G A R C I A';
     const guildId = guild.id;
@@ -284,7 +277,7 @@ client.on('interactionCreate', async (interaction) => {
     const acceptChannel = await client.channels.fetch(CHANNEL_ACCEPT_ID);
     await acceptChannel.send(`Заявка от пользователя <@${targetUserId}> принята!`);
 
-    await interaction.reply({ content: '✅ Уведомление о принятии отправлено.', ephemeral: true });
+    await interaction.reply({ content: '✅ Уведомление о принятии отправлено.', flags: 64 });
   }
 
   // Обработка кнопки "Отклонить"
@@ -292,7 +285,7 @@ client.on('interactionCreate', async (interaction) => {
     const targetUserId = interaction.customId.split(':')[1];
     const guild = interaction.guild;
     const member = await guild.members.fetch(targetUserId).catch(() => null);
-    if (!member) return interaction.reply({ content: 'Пользователь не найден', ephemeral: true });
+    if (!member) return interaction.reply({ content: 'Пользователь не найден', flags: 64 });
 
     const applicationName = 'G A R C I A';
     const guildId = guild.id;
@@ -309,7 +302,7 @@ client.on('interactionCreate', async (interaction) => {
     const declineChannel = await client.channels.fetch(CHANNEL_DECLINE_ID);
     await declineChannel.send(`Заявка от пользователя <@${targetUserId}> отклонена!`);
 
-    await interaction.reply({ content: '❌ Заявка отклонена.', ephemeral: true });
+    await interaction.reply({ content: '❌ Заявка отклонена.', flags: 64 });
   }
 });
 
