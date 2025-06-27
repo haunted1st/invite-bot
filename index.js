@@ -240,24 +240,29 @@ client.on('interactionCreate', async (interaction) => {
   }
 
   client.on('interactionCreate', async (interaction) => {
-  if (!interaction || !interaction.isButton()) {
-    console.log('Ошибка: взаимодействие не найдено');
-    return;
+  if (!interaction.isButton()) return;
+
+  const { customId } = interaction;
+  console.log('Получено взаимодействие с кнопкой:', customId);
+
+  // Обработка открытия модала
+  if (customId === 'open_modal') {
+    // Код для открытия модала
   }
 
-  console.log('Получено взаимодействие с кнопкой:', interaction.customId);
+  // Обработка модальных окон
+  if (interaction.type === InteractionType.ModalSubmit && customId === 'application_modal') {
+    // Код для обработки модального окна
+  }
 
-  if (interaction.customId.startsWith('call_app:')) {
-    const targetUserId = interaction.customId.split(':')[1];
+  // Обработка кнопки "Обзвон"
+  if (customId.startsWith('call_app:')) {
+    const targetUserId = customId.split(':')[1];
     console.log('Обрабатываем обзвон для пользователя с ID:', targetUserId);
 
     const guild = interaction.guild;
     const member = await guild.members.fetch(targetUserId).catch(() => null);
-
-    if (!member) {
-      console.log('Пользователь не найден в гильдии');
-      return interaction.reply({ content: 'Пользователь не найден', flags: 64 });
-    }
+    if (!member) return interaction.reply({ content: 'Пользователь не найден', flags: 64 });
 
     console.log('Пользователь найден:', member.user.tag);
 
@@ -272,16 +277,14 @@ client.on('interactionCreate', async (interaction) => {
     const voiceChannels = voiceCategory.children;
     console.log('Найдено голосовых каналов:', voiceChannels.size);
 
-    // Список заранее определенных каналов по их ID
     const selectedChannels = [
-      '1203029383871463444', // Первый канал
-      '1327303833491345419', // Второй канал
-      '1386828355499851806'  // Третий канал
+      '1203029383871463444',
+      '1327303833491345419',
+      '1386828355499851806'
     ];
 
-    // Фильтруем доступные каналы, чтобы получить только нужные
     const availableChannels = selectedChannels
-      .map(id => voiceChannels.get(id))  // Используем get для получения канала по ID
+      .map(id => voiceChannels.find(channel => channel.id === id))  // Используем find для поиска по ID
       .filter(channel => channel !== undefined);  // Фильтруем undefined значения
 
     if (availableChannels.length === 0) {
@@ -289,11 +292,7 @@ client.on('interactionCreate', async (interaction) => {
       return interaction.reply({ content: 'Не удалось найти доступные выбранные голосовые каналы.', flags: 64 });
     }
 
-    console.log('Доступные выбранные каналы:', availableChannels.map(channel => channel.name).join(', '));
-
-    // Теперь выбираем один из выбранных каналов для обзвона
     const randomChannel = availableChannels[Math.floor(Math.random() * availableChannels.length)];
-
     console.log('Выбран канал для обзвона:', randomChannel.name);
 
     await interaction.reply({
@@ -301,7 +300,6 @@ client.on('interactionCreate', async (interaction) => {
       flags: 64,
     });
 
-    // Личное сообщение пользователю
     try {
       await member.send({
         content: `Вы были вызваны на обзвон модератором ${moderator} в канал ${randomChannel.name}. Перейдите по [ссылке](${randomChannel.url}) для подключения.`
@@ -309,6 +307,15 @@ client.on('interactionCreate', async (interaction) => {
     } catch (error) {
       console.log('Ошибка при отправке личного сообщения:', error);
     }
+  }
+
+  // Обработка других кнопок (принять, отклонить и т.д.)
+  if (customId.startsWith('accept_app:')) {
+    // Обработка кнопки "Принять"
+  }
+
+  if (customId.startsWith('decline_app:')) {
+    // Обработка кнопки "Отклонить"
   }
 });
 
