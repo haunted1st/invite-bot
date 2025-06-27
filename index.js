@@ -260,7 +260,9 @@ client.on('interactionCreate', async (interaction) => {
     const moderator = interaction.user;
     const voiceCategory = await guild.channels.fetch(VOICE_CATEGORY_ID);
     const voiceChannels = voiceCategory.children;
-    const randomChannel = Array.from(voiceChannels).random(); // Получаем случайный канал
+
+    // Преобразуем коллекцию в массив и выбираем случайный элемент
+    const randomChannel = Array.from(voiceChannels)[Math.floor(Math.random() * voiceChannels.size)];
 
     if (!randomChannel) {
       console.log('Не удалось найти голосовой канал для обзвона');
