@@ -156,12 +156,18 @@ client.on('interactionCreate', async (interaction) => {
   }
 
   if (interaction.type === InteractionType.ModalSubmit && interaction.customId === 'application_modal') {
+  console.log('📥 Обработка ModalSubmit началась');
+
   try {
     await interaction.deferReply({ ephemeral: true });
 
     const user = interaction.user;
     const guild = interaction.guild;
-    if (!guild) return interaction.editReply({ content: '❌ Ошибка: команда доступна только на сервере.', ephemeral: true });
+
+    if (!guild) {
+      console.error('❌ Guild не найден в ModalSubmit');
+      return interaction.editReply({ content: '❌ Ошибка: команда доступна только на сервере.', ephemeral: true });
+    }
 
     const nicknameStat = interaction.fields.getTextInputValue('nickname_stat');
     const irl = interaction.fields.getTextInputValue('irl_name_age');
@@ -183,7 +189,14 @@ client.on('interactionCreate', async (interaction) => {
       type: ChannelType.GuildText,
       parent: CATEGORY_ID,
       permissionOverwrites: overwrites
+    }).catch(err => {
+      console.error('❌ Ошибка при создании канала:', err);
     });
+
+    if (!channel) {
+      console.error('❌ Канал не был создан');
+      return interaction.editReply({ content: '❌ Не удалось создать канал.' });
+    }
 
     const embed = new EmbedBuilder()
       .setTitle('📨 Заявка')
@@ -210,15 +223,17 @@ client.on('interactionCreate', async (interaction) => {
       content: ROLES_ACCESS_IDS.map(id => `<@&${id}>`).join(' '),
       embeds: [embed],
       components: [buttons]
+    }).catch(err => {
+      console.error('❌ Ошибка при отправке embed и кнопок:', err);
     });
 
     await interaction.editReply({ content: `✅ Ваша заявка отправлена: ${channel}` });
   } catch (err) {
-    console.error('Modal error:', err);
+    console.error('❌ Ошибка в обработке ModalSubmit:', err);
     if (!interaction.deferred && !interaction.replied) {
-      await interaction.reply({ content: '❌ Ошибка при отправке.', flags: 64 }).catch(() => { });
+      await interaction.reply({ content: '❌ Ошибка при отправке.', ephemeral: true }).catch(() => {});
     } else {
-      await interaction.editReply({ content: '❌ Ошибка при отправке.' }).catch(() => { });
+      await interaction.editReply({ content: '❌ Ошибка при отправке.' }).catch(() => {});
     }
   }
 }
