@@ -30,6 +30,7 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildVoiceStates,
   ],
   partials: [Partials.Channel],
 });
@@ -39,10 +40,10 @@ const ROLES_ACCESS_IDS = [
   '1203016198850355231', // роль для High PR
   '1203021666800902184',  // роль для PR
 ];
-const CHANNEL_ACCEPT_ID = '1386830144789942272';
-const CHANNEL_DECLINE_ID = '1386830559136714825';
-const CHANNEL_LOG_ID = '1304923881294925876';
-const INVITE_CHANNEL_ID = '1387148896320487564';
+const CHANNEL_ACCEPT_ID = '1386830144789942272'; // Канал для принятия заявок
+const CHANNEL_DECLINE_ID = '1386830559136714825'; // Канал для отклонения заявок
+const CHANNEL_LOG_ID = '1304923881294925876'; // Канал логов
+const INVITE_CHANNEL_ID = '1387148896320487564'; // Канал приглашений
 
 // Функция создания уведомления о статусе заявки
 function createStatusNotificationEmbed(status, applicationName, channelName = '', guildId, applicationLink = '') {
@@ -208,32 +209,23 @@ client.on('interactionCreate', async (interaction) => {
     }
   }
 
-  // Обработка кнопки "Принять"
-  if (interaction.isButton() && interaction.customId.startsWith('accept_app:')) {
-    const targetUserId = interaction.customId.split(':')[1];
-    const guild = interaction.guild;
-    const member = await guild.members.fetch(targetUserId).catch(() => null);
-    if (!member) return interaction.reply({ content: 'Пользователь не найден', ephemeral: true });
-
-    // Убедитесь, что статус "принято" правильно создаётся
-    const applicationName = 'G A R C I A';
-    const embed = createStatusNotificationEmbed('принято', applicationName, '', guild.id);
-
-    // Отправка уведомления в личку
-    await member.send({ embeds: [embed] }).catch(() => {});
-    await interaction.reply({ content: '✅ Уведомление о принятии отправлено.', ephemeral: true });
-  }
-
-  // --- Обработка кнопки "Рассмотрение" с использованием новой функции ---
+  // Обработка кнопки "Рассмотрение"
   if (interaction.isButton() && interaction.customId.startsWith('review_app:')) {
     const targetUserId = interaction.customId.split(':')[1];
     const guild = interaction.guild;
     const member = await guild.members.fetch(targetUserId).catch(() => null);
     if (!member) return interaction.reply({ content: 'Пользователь не найден', ephemeral: true });
 
-    const embed = createStatusNotificationEmbed('рассмотрение', 'G A R C I A', '', guild.id);
-    await member.send({ embeds: [embed] }).catch(() => {});
-    await interaction.reply({ content: '✅ Статус изменён на Рассмотрение.', ephemeral: true });
+    const moderator = interaction.user;
+
+    const logChannel = await client.channels.fetch(CHANNEL_LOG_ID);
+    await logChannel.send(`${moderator} взял заявку пользователя <@${targetUserId}> на рассмотрение.`);
+
+    // Отправляем сообщение с упоминанием модератора
+    await interaction.reply({
+      content: `Заявка пользователя <@${targetUserId}> взята на рассмотрение модератором ${moderator}`,
+      ephemeral: true,
+    });
   }
 
   // Обработка кнопки "Обзвон"
@@ -243,9 +235,45 @@ client.on('interactionCreate', async (interaction) => {
     const member = await guild.members.fetch(targetUserId).catch(() => null);
     if (!member) return interaction.reply({ content: 'Пользователь не найден', ephemeral: true });
 
-    const embed = createStatusNotificationEmbed('обзвон', 'G A R C I A', '', guild.id);
+    const moderator = interaction.user;
+    const voiceChannels = guild.channels.cache.filter(ch => ch.type === 'GUILD_VOICE');
+    
+    const voiceChannel = await interaction.channel.send({
+      content: 'Пожалуйста, выберите голосовой канал для обзвона.',
+      components: [
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setCustomId('select_channel').setLabel('Выбрать канал').setStyle(ButtonStyle.Primary)
+        ),
+      ],
+    });
+
+    // Примерно так: 
+    // Пишем, что пользователь был вызван на обзвон и упоминаем канал
+    await interaction.reply({
+      content: `${member} был вызван на обзвон модератором ${moderator} в канал ${voiceChannel}`,
+      ephemeral: true,
+    });
+  }
+
+  // Обработка кнопки "Принять"
+  if (interaction.isButton() && interaction.customId.startsWith('accept_app:')) {
+    const targetUserId = interaction.customId.split(':')[1];
+    const guild = interaction.guild;
+    const member = await guild.members.fetch(targetUserId).catch(() => null);
+    if (!member) return interaction.reply({ content: 'Пользователь не найден', ephemeral: true });
+
+    const applicationName = 'G A R C I A';
+    const guildId = guild.id;
+
+    const embed = createStatusNotificationEmbed('принято', applicationName, '', guildId);
+
     await member.send({ embeds: [embed] }).catch(() => {});
-    await interaction.reply({ content: '✅ Статус изменён на Обзвон.', ephemeral: true });
+
+    // Логирование в invite-logs
+    const logChannel = await client.channels.fetch(CHANNEL_LOG_ID);
+    await logChannel.send(`${interaction.user} принял заявку пользователя <@${targetUserId}>`);
+
+    await interaction.reply({ content: '✅ Уведомление о принятии отправлено.', ephemeral: true });
   }
 
   // Обработка кнопки "Отклонить"
@@ -255,11 +283,19 @@ client.on('interactionCreate', async (interaction) => {
     const member = await guild.members.fetch(targetUserId).catch(() => null);
     if (!member) return interaction.reply({ content: 'Пользователь не найден', ephemeral: true });
 
-    const embed = createStatusNotificationEmbed('отклонено', 'G A R C I A', '', guild.id);
+    const applicationName = 'G A R C I A';
+    const guildId = guild.id;
+
+    const embed = createStatusNotificationEmbed('отклонено', applicationName, '', guildId);
+
     await member.send({ embeds: [embed] }).catch(() => {});
-    await interaction.reply({ content: '✅ Заявка отклонена.', ephemeral: true });
+
+    // Логирование в invite-logs
+    const logChannel = await client.channels.fetch(CHANNEL_LOG_ID);
+    await logChannel.send(`${interaction.user} отклонил заявку пользователя <@${targetUserId}>`);
+
+    await interaction.reply({ content: '❌ Заявка отклонена.', ephemeral: true });
   }
 });
 
-console.log('🔐 Токен загружен');
 client.login(process.env.TOKEN);
