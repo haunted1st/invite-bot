@@ -36,6 +36,12 @@ const client = new Client({
 });
 
 const CATEGORY_ID = '1200037290538451095';
+const VOICE_CATEGORY_ID = '1203018614253555812';
+const VOICE_CHANNELS = [
+  '1203029383871463444',
+  '1327303833491345419',
+  '1386828355499851806'
+];
 const ROLES_ACCESS_IDS = [
   '1203016198850355231', // роль для High PR
   '1203021666800902184',  // роль для PR
@@ -226,6 +232,11 @@ client.on('interactionCreate', async (interaction) => {
       content: `Заявка пользователя <@${targetUserId}> взята на рассмотрение модератором ${moderator}`,
       ephemeral: true,
     });
+
+    // Личное сообщение пользователю
+    await member.send({
+      content: `Ваша заявка была взята на рассмотрение модератором ${moderator}.`
+    }).catch(() => {});
   }
 
   // Обработка кнопки "Обзвон"
@@ -236,23 +247,19 @@ client.on('interactionCreate', async (interaction) => {
     if (!member) return interaction.reply({ content: 'Пользователь не найден', ephemeral: true });
 
     const moderator = interaction.user;
-    const voiceChannels = guild.channels.cache.filter(ch => ch.type === 'GUILD_VOICE');
 
-    const voiceChannel = await interaction.channel.send({
-      content: 'Пожалуйста, выберите голосовой канал для обзвона.',
-      components: [
-        new ActionRowBuilder().addComponents(
-          new ButtonBuilder().setCustomId('select_channel').setLabel('Выбрать канал').setStyle(ButtonStyle.Primary)
-        ),
-      ],
-    });
+    const voiceCategory = await guild.channels.fetch(VOICE_CATEGORY_ID);
+    const voiceChannel = voiceCategory.children.random(); // Выбираем случайный голосовой канал
 
-    // Примерно так: 
-    // Пишем, что пользователь был вызван на обзвон и упоминаем канал
     await interaction.reply({
-      content: `${member} был вызван на обзвон модератором ${moderator} в канал ${voiceChannel}`,
+      content: `${member} был вызван на обзвон модератором ${moderator} в канал ${voiceChannel}.`,
       ephemeral: true,
     });
+
+    // Личное сообщение пользователю
+    await member.send({
+      content: `Вы были вызваны на обзвон модератором ${moderator} в канал ${voiceChannel}.`
+    }).catch(() => {});
   }
 
   // Обработка кнопки "Принять"
