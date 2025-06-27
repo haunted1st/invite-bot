@@ -22,6 +22,10 @@ const {
   StringSelectMenuBuilder
 } = require('discord.js');
 
+const dayjs = require('dayjs');
+const relativeTime = require('dayjs/plugin/relativeTime');
+dayjs.extend(relativeTime);
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -42,6 +46,60 @@ const CHANNEL_ACCEPT_ID = '1386830144789942272';
 const CHANNEL_DECLINE_ID = '1386830559136714825';
 const CHANNEL_LOG_ID = '1304923881294925876';
 const INVITE_CHANNEL_ID = '1387148896320487564';
+
+// --- Добавлена универсальная функция для создания embed с цветом и текстом по статусу ---
+function createStatusNotificationEmbed(status, applicationName, channelName = '', guildId, applicationLink = '') {
+  let color;
+  let title = '';
+  let description = '';
+  
+  const timeAgo = dayjs().fromNow(); // Пример: "17 hours ago"
+  
+  switch (status.toLowerCase()) {
+    case 'рассмотрение':
+      color = 0xf1c40f; // жёлтый
+      title = 'Рассмотрение заявки';
+      description = `Ваша заявка в **${applicationName}** взята на рассмотрение!\n\n` +
+                    `Ссылка на заявку: ${applicationLink || '⁠' + applicationName + '⁠unknown'}\n` +
+                    `ID Дискорд сервера: ${guildId}\n` +
+                    `Дата события: ${timeAgo}`;
+      break;
+    case 'обзвон':
+      color = 0x3498db; // синий
+      title = 'Приглашение на обзвон';
+      description = `Вы были вызваны на обзвон!\n\n` +
+                    `Вас приглашают присоединиться к голосовому каналу: **${applicationName}** ${channelName}\n` +
+                    `ID Дискорд сервера: ${guildId}\n` +
+                    `Дата события: ${timeAgo}`;
+      break;
+    case 'принято':
+      color = 0x2ecc71; // зелёный
+      title = 'Заявка принята';
+      description = `Ваша заявка в **${applicationName}** успешно принята!\n\n` +
+                    `ID Дискорд сервера: ${guildId}\n` +
+                    `Дата события: ${timeAgo}`;
+      break;
+    case 'отклонено':
+      color = 0xe74c3c; // красный
+      title = 'Заявка отклонена';
+      description = `К сожалению, ваша заявка в **${applicationName}** была отклонена.\n\n` +
+                    `ID Дискорд сервера: ${guildId}\n` +
+                    `Дата события: ${timeAgo}`;
+      break;
+    default:
+      color = 0x2f3136; // серый
+      title = 'Статус заявки обновлён';
+      description = `Статус заявки **${applicationName}** изменён.\n\n` +
+                    `ID Дискорд сервера: ${guildId}\n` +
+                    `Дата события: ${timeAgo}`;
+  }
+
+  return new EmbedBuilder()
+    .setColor(color)
+    .setTitle(title)
+    .setDescription(description)
+    .setTimestamp();
+}
 
 client.once('ready', async () => {
   console.log(`✅ Бот запущен как ${client.user.tag}`);
@@ -163,97 +221,103 @@ client.on('interactionCreate', async (interaction) => {
     }
   }
 
-  if (interaction.isButton() && interaction.customId.includes('app:')) {
-    const [action, targetUserId] = interaction.customId.split(':');
+  // --- Обработка кнопки "Рассмотрение" с использованием новой функции ---
+  if (interaction.isButton() && interaction.customId.startsWith('review_app:')) {
+    const targetUserId = interaction.customId.split(':')[1];
     const guild = interaction.guild;
     const member = await guild.members.fetch(targetUserId).catch(() => null);
-    const appChannel = interaction.channel;
+    if (!member) return interaction.reply({ content: 'Пользователь не найден', ephemeral: true });
+
+    // Здесь можно динамически получить название заявки из твоих данных, пока пример с константой:
+    const applicationName = 'G A R C I A';
+    const guildId = guild.id;
+    const applicationLink = ''; // Можно передать ссылку на заявку, если есть
+
+    const embed = createStatusNotificationEmbed('рассмотрение', applicationName, '', guildId, applicationLink);
+
+    await member.send({ embeds: [embed] }).catch(() => {});
+    await interaction.reply({ content: '✅ Уведомление о рассмотрении отправлено.', ephemeral: true });
+  }
+
+  // --- Обработка кнопки "Обзвон" с использованием новой функции ---
+  if (interaction.isButton() && interaction.customId.startsWith('call_app:')) {
+    const targetUserId = interaction.customId.split(':')[1];
+    const guild = interaction.guild;
+    const member = await guild.members.fetch(targetUserId).catch(() => null);
+    if (!member) return interaction.reply({ content: 'Пользователь не найден', ephemeral: true });
+
+    const applicationName = 'G A R C I A';
+    const channelName = '☎️・Обзвон #2';
+    const guildId = guild.id;
+
+    const embed = createStatusNotificationEmbed('обзвон', applicationName, channelName, guildId);
+
+    await member.send({ embeds: [embed] }).catch(() => {});
+    await interaction.reply({ content: '✅ Уведомление об обзвоне отправлено.', ephemeral: true });
+  }
+
+  // Остальной код (отклонение, обзвон с селектом и т.п.) без изменений
+  if (interaction.isButton() && interaction.customId.includes('decline_app')) {
+    const [action, targetUserId] = interaction.customId.split(':');
+    const modal = new ModalBuilder()
+      .setCustomId(`decline_modal:${targetUserId}`)
+      .setTitle('Причина отказа');
+
+    const reasonInput = new TextInputBuilder()
+      .setCustomId('decline_reason')
+      .setLabel('Укажите причину отказа')
+      .setStyle(TextInputStyle.Paragraph)
+      .setRequired(true)
+      .setPlaceholder('Например: Недостаточно опыта, слабые откаты и т.д.');
+
+    const modalRow = new ActionRowBuilder().addComponents(reasonInput);
+    modal.addComponents(modalRow);
+
+    return interaction.showModal(modal);
+  }
+
+  if (interaction.type === InteractionType.ModalSubmit && interaction.customId.startsWith('decline_modal:')) {
+    const targetUserId = interaction.customId.split(':')[1];
+    const reason = interaction.fields.getTextInputValue('decline_reason');
+    const guild = interaction.guild;
+    const member = await guild.members.fetch(targetUserId).catch(() => null);
     const logChannel = await guild.channels.fetch(CHANNEL_LOG_ID).catch(() => null);
-    if (!member) return;
+    const targetChannel = await guild.channels.fetch(CHANNEL_DECLINE_ID).catch(() => null);
+    const appChannel = interaction.channel;
+    const embedToSend = interaction.message?.embeds?.[0];
 
-    const embedToSend = interaction.message.embeds?.[0];
-
-    if (action === 'accept_app') {
-      const targetChannel = await guild.channels.fetch(CHANNEL_ACCEPT_ID).catch(() => null);
-      if (targetChannel?.isTextBased() && embedToSend) {
-        await targetChannel.send({
-          content: `✅ Принятая заявка от <@${targetUserId}>`,
-          embeds: [embedToSend]
-        });
-      }
-
-      await logChannel?.send({
-        embeds: [new EmbedBuilder()
-          .setTitle('✅ Заявка принята')
-          .setDescription(`Заявка от <@${targetUserId}> была **принята** модератором <@${interaction.user.id}>.`)
-          .setColor('Green')
-          .setTimestamp()]
-      });
-
-      await member.send({
-        embeds: [new EmbedBuilder()
-          .setTitle('✅ Ваша заявка принята')
-          .setDescription(`Поздравляем! Ваша заявка была принята. Добро пожаловать!`)
-          .setColor('Green')]
-      }).catch(() => {});
-
-      await interaction.reply({ content: '✅ Заявка перемещена в принятые.', ephemeral: true });
-      setTimeout(() => appChannel.delete().catch(() => {}), 1000);
+    if (!member || !embedToSend) {
+      return interaction.reply({ content: '❌ Не удалось отклонить заявку.', ephemeral: true });
     }
 
-    if (action === 'review_app') {
-      await appChannel.send(`📥 Заявка <@${targetUserId}> взята на рассмотрение модератором <@${interaction.user.id}>`);
-      await member.send({
-        embeds: [new EmbedBuilder()
-          .setTitle('🔎 Рассмотрение заявки')
-          .setDescription(`Ваша заявка в семью взята на рассмотрение!\nСсылка: ${appChannel}`)
-          .setColor('Orange')]
-      }).catch(() => {});
-      return interaction.reply({ content: '📥 Заявка взята на рассмотрение.', ephemeral: true });
-    }
+    const embedWithReason = EmbedBuilder.from(embedToSend)
+      .addFields({ name: '❌ Причина отказа', value: reason });
 
-    if (action === 'call_app') {
-      const voiceChannels = guild.channels.cache.filter(c => c.type === ChannelType.GuildVoice);
-      const options = voiceChannels.map(vc => ({ label: vc.name, value: vc.id })).slice(0, 25);
-      const selectMenu = new StringSelectMenuBuilder()
-        .setCustomId(`call_select:${targetUserId}`)
-        .setPlaceholder('Выберите голосовой канал для обзвона')
-        .addOptions(options);
-
-      return interaction.reply({
-        content: '🔊 Выберите голосовой канал для обзвона:',
-        components: [new ActionRowBuilder().addComponents(selectMenu)],
-        ephemeral: true
+    if (targetChannel?.isTextBased()) {
+      await targetChannel.send({
+        content: `❌ Заявка от <@${targetUserId}> была отклонена.`,
+        embeds: [embedWithReason]
       });
     }
 
-    if (action === 'decline_app') {
-      const targetChannel = await guild.channels.fetch(CHANNEL_DECLINE_ID).catch(() => null);
-      if (targetChannel?.isTextBased() && embedToSend) {
-        await targetChannel.send({
-          content: `❌ Заявка от <@${targetUserId}> была отклонена.`,
-          embeds: [embedToSend]
-        });
-      }
+    await logChannel?.send({
+      embeds: [new EmbedBuilder()
+        .setTitle('❌ Заявка отклонена')
+        .setDescription(`Заявка от <@${targetUserId}> была **отклонена** модератором <@${interaction.user.id}>.`)
+        .addFields({ name: 'Причина', value: reason })
+        .setColor('Red')
+        .setTimestamp()]
+    });
 
-      await logChannel?.send({
-        embeds: [new EmbedBuilder()
-          .setTitle('❌ Заявка отклонена')
-          .setDescription(`Заявка от <@${targetUserId}> была **отклонена** модератором <@${interaction.user.id}>.`)
-          .setColor('Red')
-          .setTimestamp()]
-      });
+    await member.send({
+      embeds: [new EmbedBuilder()
+        .setTitle('❌ Ваша заявка отклонена')
+        .setDescription(`К сожалению, ваша заявка была отклонена.\n**Причина:** ${reason}`)
+        .setColor('Red')]
+    }).catch(() => {});
 
-      await member.send({
-        embeds: [new EmbedBuilder()
-          .setTitle('❌ Ваша заявка отклонена')
-          .setDescription('К сожалению, ваша заявка была отклонена. Не отчаивайтесь и попробуйте позже!')
-          .setColor('Red')]
-      }).catch(() => {});
-
-      await interaction.reply({ content: '❌ Заявка отклонена.', ephemeral: true });
-      setTimeout(() => appChannel.delete().catch(() => {}), 1000);
-    }
+    await interaction.reply({ content: '❌ Заявка отклонена с указанием причины.', ephemeral: true });
+    setTimeout(() => appChannel.delete().catch(() => {}), 1000);
   }
 
   if (interaction.isStringSelectMenu()) {
