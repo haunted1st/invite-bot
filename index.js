@@ -186,19 +186,20 @@ client.on('interactionCreate', async (interaction) => {
         .setColor(0xf1c40f)
         .setTimestamp();
 
-      const buttons = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`accept_app:${user.id}`).setLabel('Принять').setStyle(ButtonStyle.Success),
-        new ButtonBuilder().setCustomId(`review_app:${user.id}`).setLabel('Рассмотрение').setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder().setCustomId(`call_app:${user.id}`).setLabel('Обзвон').setStyle(ButtonStyle.Primary),
-        new ButtonBuilder().setCustomId(`decline_app:${user.id}`).setLabel('Отклонить').setStyle(ButtonStyle.Danger)
-      );
+    const buttons = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId(`accept_app:${user.id}`).setLabel('Принять').setStyle(ButtonStyle.Success),
+      new ButtonBuilder().setCustomId(`review_app:${user.id}`).setLabel('Рассмотрение').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId(`call_app:${user.id}`).setLabel('Обзвон').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId(`decline_app:${user.id}`).setLabel('Отклонить').setStyle(ButtonStyle.Danger)
+    );
 
-      await channel.send({
-        content: ROLES_ACCESS_IDS.map(id => `<@&${id}>`).join(' '),
-        embeds: [embed],
-        components: [buttons]
-      });
+    console.log('Отправляем кнопки в канал заявки:', channelName); // Логируем название канала
 
+    await channel.send({
+     content: ROLES_ACCESS_IDS.map(id => `<@&${id}>`).join(' '),
+     embeds: [embed],
+     components: [buttons]
+    });
       await interaction.editReply({ content: `✅ Ваша заявка отправлена: ${channel}`, flags: 64 });
     } catch (err) {
       console.error('Modal error:', err);
@@ -238,12 +239,22 @@ client.on('interactionCreate', async (interaction) => {
     });
   }
 
-  // Обработка кнопки "Обзвон"
+  client.on('interactionCreate', async (interaction) => {
+  console.log('Взаимодействие с кнопкой:', interaction.customId); // Логируем ID нажатой кнопки
+
   if (interaction.isButton() && interaction.customId.startsWith('call_app:')) {
     const targetUserId = interaction.customId.split(':')[1];
+    console.log('Обрабатываем обзвон для пользователя с ID:', targetUserId); // Логируем ID пользователя
+
     const guild = interaction.guild;
     const member = await guild.members.fetch(targetUserId).catch(() => null);
-    if (!member) return interaction.reply({ content: 'Пользователь не найден', flags: 64 });
+
+    if (!member) {
+      console.log('Пользователь не найден в гильдии');
+      return interaction.reply({ content: 'Пользователь не найден', flags: 64 });
+    }
+
+    console.log('Пользователь найден:', member.user.tag); // Логируем информацию о пользователе
 
     const moderator = interaction.user;
     const voiceCategory = await guild.channels.fetch(VOICE_CATEGORY_ID);
@@ -251,22 +262,23 @@ client.on('interactionCreate', async (interaction) => {
     const randomChannel = voiceChannels.random();
 
     if (!randomChannel) {
+      console.log('Не удалось найти голосовой канал для обзвона');
       return interaction.reply({ content: 'Не удалось найти доступные голосовые каналы для обзвона.', flags: 64 });
     }
 
-    // Создание ссылки на канал
-    const channelLink = `https://discord.com/channels/${guild.id}/${randomChannel.id}`;
+    console.log('Выбран канал для обзвона:', randomChannel.name); // Логируем выбранный голосовой канал
 
     await interaction.reply({
-      content: `${member} был вызван на обзвон модератором ${moderator} в канал ${randomChannel}. Ссылка на канал: [Перейти в канал](${channelLink}).`,
+      content: `${member} был вызван на обзвон модератором ${moderator} в канал ${randomChannel}.`,
       flags: 64,
     });
 
     // Личное сообщение пользователю
     await member.send({
-      content: `Вы были вызваны на обзвон модератором ${moderator} в канал ${randomChannel}. Ссылка на канал: [Перейти в канал](${channelLink}).`
+      content: `Вы были вызваны на обзвон модератором ${moderator} в канал ${randomChannel}.`
     }).catch(() => {});
   }
+});
 
   // Обработка кнопки "Принять"
   if (interaction.isButton() && interaction.customId.startsWith('accept_app:')) {
