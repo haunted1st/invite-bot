@@ -247,44 +247,57 @@ client.on('interactionCreate', async (interaction) => {
     
     // Ваши дополнительные условия и логика
     if (interaction.customId.startsWith('call_app:')) {
-      const targetUserId = interaction.customId.split(':')[1];
-      console.log('Обрабатываем обзвон для пользователя с ID:', targetUserId); // Логируем ID пользователя
+  const targetUserId = interaction.customId.split(':')[1];
+  console.log('Обрабатываем обзвон для пользователя с ID:', targetUserId); // Логируем ID пользователя
 
-      const guild = interaction.guild;
-      const member = await guild.members.fetch(targetUserId).catch(() => null);
+  const guild = interaction.guild;
+  const member = await guild.members.fetch(targetUserId).catch(() => null);
 
-      if (!member) {
-        console.log('Пользователь не найден в гильдии');
-        return interaction.reply({ content: 'Пользователь не найден', flags: 64 });
-      }
+  if (!member) {
+    console.log('Пользователь не найден в гильдии');
+    return interaction.reply({ content: 'Пользователь не найден', flags: 64 });
+  }
 
-      console.log('Пользователь найден:', member.user.tag); // Логируем информацию о пользователе
+  console.log('Пользователь найден:', member.user.tag); // Логируем информацию о пользователе
 
-      const moderator = interaction.user;
-      const voiceCategory = await guild.channels.fetch(VOICE_CATEGORY_ID);
-      const voiceChannels = voiceCategory.children;
+  const moderator = interaction.user;
+  const voiceCategory = await guild.channels.fetch(VOICE_CATEGORY_ID);
+  
+  if (!voiceCategory) {
+    console.log('Категория для голосовых каналов не найдена!');
+    return interaction.reply({ content: 'Категория для голосовых каналов не найдена.', flags: 64 });
+  }
 
-      // Преобразуем коллекцию в массив и выбираем случайный элемент
-      const randomChannel = Array.from(voiceChannels)[Math.floor(Math.random() * voiceChannels.size)];
+  const voiceChannels = voiceCategory.children;
+  console.log('Найдено голосовых каналов:', voiceChannels.size); // Логируем количество голосовых каналов
 
-      if (!randomChannel) {
-        console.log('Не удалось найти голосовой канал для обзвона');
-        return interaction.reply({ content: 'Не удалось найти доступные голосовые каналы для обзвона.', flags: 64 });
-      }
+  // Проверка, есть ли вообще голосовые каналы
+  if (voiceChannels.size === 0) {
+    console.log('В категории нет голосовых каналов');
+    return interaction.reply({ content: 'В категории нет голосовых каналов для обзвона.', flags: 64 });
+  }
 
-      console.log('Выбран канал для обзвона:', randomChannel.name); // Логируем выбранный голосовой канал
+  // Преобразуем коллекцию в массив и выбираем случайный голосовой канал
+  const randomChannel = Array.from(voiceChannels)[Math.floor(Math.random() * voiceChannels.size)];
 
-      await interaction.reply({
-        content: `${member} был вызван на обзвон модератором ${moderator} в канал ${randomChannel}.`,
-        flags: 64,
-      });
+  if (!randomChannel) {
+    console.log('Не удалось выбрать голосовой канал для обзвона');
+    return interaction.reply({ content: 'Не удалось выбрать голосовой канал для обзвона.', flags: 64 });
+  }
 
-      // Личное сообщение пользователю
-      await member.send({
-        content: `Вы были вызваны на обзвон модератором ${moderator} в канал ${randomChannel}. Перейдите по [ссылке](${randomChannel.url}) для подключения.`
-      }).catch(() => {});
-    }
-  } // Закрытие первого блока if (interaction.isButton())
+  console.log('Выбран канал для обзвона:', randomChannel.name); // Логируем выбранный голосовой канал
+
+  await interaction.reply({
+    content: `${member} был вызван на обзвон модератором ${moderator} в канал ${randomChannel.name}.`,
+    flags: 64,
+  });
+
+  // Личное сообщение пользователю
+  await member.send({
+    content: `Вы были вызваны на обзвон модератором ${moderator} в канал ${randomChannel.name}. Перейдите по [ссылке](${randomChannel.url}) для подключения.`
+  }).catch(() => {});
+}
+} // Закрытие первого блока if (interaction.isButton())
 
 });
 
