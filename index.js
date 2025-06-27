@@ -37,10 +37,8 @@ const client = new Client({
 
 const CATEGORY_ID = '1200037290538451095';
 const ROLES_ACCESS_IDS = [
-  '1200040982746517595',
-  '1200045928460058768',
-  '1203021666800902184',
-  '1203016198850355231'
+  '1388191362922582047', // High PR
+  '1388191362922582048'  // PR
 ];
 const CHANNEL_ACCEPT_ID = '1386830144789942272';
 const CHANNEL_DECLINE_ID = '1386830559136714825';
@@ -169,7 +167,7 @@ client.on('interactionCreate', async (interaction) => {
       const servers = interaction.fields.getTextInputValue('servers');
       const recoil = interaction.fields.getTextInputValue('recoil_links');
 
-      const channelName = `заявка-в-семью-${user.username}`.toLowerCase().replace(/[^a-z0-9\-а-я]/gi, '-');
+      const channelName = `заявка-${user.username}`.toLowerCase().replace(/[^a-z0-9\-а-я]/gi, '-');
       const overwrites = [
         { id: guild.roles.everyone, deny: [PermissionsBitField.Flags.ViewChannel] },
         { id: user.id, allow: [PermissionsBitField.Flags.ViewChannel] },
@@ -184,18 +182,18 @@ client.on('interactionCreate', async (interaction) => {
       });
 
       const embed = new EmbedBuilder()
-        .setTitle('📨 Заявка')
-        .addFields(
-          { name: 'Никнейм и статик', value: nicknameStat },
-          { name: 'IRL имя и возраст', value: irl },
-          { name: 'Семьи ранее', value: history },
-          { name: 'Сервера', value: servers },
-          { name: 'Откаты стрельбы', value: recoil },
-          { name: 'Пользователь', value: `<@${user.id}>` }
-        )
-        .setFooter({ text: `ID: ${user.id}` })
-        .setColor(0x2f3136)
-        .setTimestamp();
+  .setTitle('📨 Заявка')
+  .addFields(
+    { name: 'Никнейм и статик', value: nicknameStat },
+    { name: 'IRL имя и возраст', value: irl },
+    { name: 'Семьи ранее', value: history },
+    { name: 'Сервера', value: servers },
+    { name: 'Откаты стрельбы', value: recoil },
+    { name: 'Пользователь', value: `<@${user.id}>` }
+  )
+  .setFooter({ text: `ID: ${user.id}` })
+  .setColor(0xf1c40f)
+  .setTimestamp();
 
       const buttons = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId(`accept_app:${user.id}`).setLabel('Принять').setStyle(ButtonStyle.Success),
