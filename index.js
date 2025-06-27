@@ -161,7 +161,7 @@ client.on('interactionCreate', async (interaction) => {
       const overwrites = [
         { id: guild.roles.everyone, deny: [PermissionsBitField.Flags.ViewChannel] },
         { id: user.id, allow: [PermissionsBitField.Flags.ViewChannel] },
-        ...ROLES_ACCESS_IDS.map(roleId => ({ id: roleId, allow: [PermissionsBitField.Flags.ViewChannel] }))
+        ...ROLES_ACCESS_IDS.map(roleId => ({ id: roleId, allow: [PermissionsBitField.Flags.ViewChannel] })), 
       ];
 
       const channel = await guild.channels.create({
@@ -237,7 +237,7 @@ client.on('interactionCreate', async (interaction) => {
 
     const moderator = interaction.user;
     const voiceChannels = guild.channels.cache.filter(ch => ch.type === 'GUILD_VOICE');
-    
+
     const voiceChannel = await interaction.channel.send({
       content: 'Пожалуйста, выберите голосовой канал для обзвона.',
       components: [
@@ -273,6 +273,10 @@ client.on('interactionCreate', async (interaction) => {
     const logChannel = await client.channels.fetch(CHANNEL_LOG_ID);
     await logChannel.send(`${interaction.user} принял заявку пользователя <@${targetUserId}>`);
 
+    // Логирование в канал принятия
+    const acceptChannel = await client.channels.fetch(CHANNEL_ACCEPT_ID);
+    await acceptChannel.send(`Заявка от пользователя <@${targetUserId}> принята!`);
+
     await interaction.reply({ content: '✅ Уведомление о принятии отправлено.', ephemeral: true });
   }
 
@@ -293,6 +297,10 @@ client.on('interactionCreate', async (interaction) => {
     // Логирование в invite-logs
     const logChannel = await client.channels.fetch(CHANNEL_LOG_ID);
     await logChannel.send(`${interaction.user} отклонил заявку пользователя <@${targetUserId}>`);
+
+    // Логирование в канал отклонений
+    const declineChannel = await client.channels.fetch(CHANNEL_DECLINE_ID);
+    await declineChannel.send(`Заявка от пользователя <@${targetUserId}> отклонена!`);
 
     await interaction.reply({ content: '❌ Заявка отклонена.', ephemeral: true });
   }
