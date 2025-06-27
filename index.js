@@ -247,7 +247,7 @@ client.on('interactionCreate', async (interaction) => {
     
     // Ваши дополнительные условия и логика
     if (interaction.customId.startsWith('call_app:')) {
-  await interaction.deferReply(); // Добавляем задержку на ответ
+  await interaction.deferReply(); // Добавляем deferReply()
 
   const targetUserId = interaction.customId.split(':')[1];
   console.log('Обрабатываем обзвон для пользователя с ID:', targetUserId); // Логируем ID пользователя
