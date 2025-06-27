@@ -19,7 +19,6 @@ const {
   ChannelType,
   PermissionsBitField,
   InteractionType,
-  StringSelectMenuBuilder
 } = require('discord.js');
 
 const dayjs = require('dayjs');
@@ -30,17 +29,15 @@ const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
+    GatewayIntentBits.MessageContent,
   ],
-  partials: [Partials.Channel]
+  partials: [Partials.Channel],
 });
 
 const CATEGORY_ID = '1200037290538451095';
 const ROLES_ACCESS_IDS = [
-  '1200040982746517595', // роль для High PR
-  '1200045928460058768',  // роль для PR
-  '1203021666800902184',  // роль для High PR
-  '1203016198850355231'   // роль для PR
+  '1203016198850355231', // роль для High PR
+  '1203021666800902184',  // роль для PR
 ];
 const CHANNEL_ACCEPT_ID = '1386830144789942272';
 const CHANNEL_DECLINE_ID = '1386830559136714825';
@@ -53,7 +50,7 @@ function createStatusNotificationEmbed(status, applicationName, channelName = ''
   let description = '';
   
   const timeAgo = dayjs().fromNow();
-  
+
   switch (status.toLowerCase()) {
     case 'рассмотрение':
       color = 0xf1c40f; // жёлтый
@@ -95,7 +92,7 @@ client.once('ready', async () => {
   if (!inviteChannel || !inviteChannel.isTextBased()) return;
 
   const messages = await inviteChannel.messages.fetch({ limit: 10 });
-  const botMessage = messages.find(m => m.author.id === client.user.id);
+  const botMessage = messages.find((m) => m.author.id === client.user.id);
   if (botMessage) await botMessage.delete().catch(() => {});
 
   const embed = new EmbedBuilder()
@@ -208,20 +205,40 @@ client.on('interactionCreate', async (interaction) => {
     }
   }
 
-  // --- Обработка кнопки "Принять" с использованием новой функции ---
-  if (interaction.isButton() && interaction.customId.startsWith('accept_app:')) {
+  // Обработка кнопки "Рассмотрение"
+  if (interaction.isButton() && interaction.customId.startsWith('review_app:')) {
     const targetUserId = interaction.customId.split(':')[1];
     const guild = interaction.guild;
     const member = await guild.members.fetch(targetUserId).catch(() => null);
     if (!member) return interaction.reply({ content: 'Пользователь не найден', ephemeral: true });
 
-    const applicationName = 'G A R C I A';
-    const guildId = guild.id;
-
-    const embed = createStatusNotificationEmbed('принято', applicationName, '', guildId);
-
+    const embed = createStatusNotificationEmbed('рассмотрение', 'G A R C I A', '', guild.id);
     await member.send({ embeds: [embed] }).catch(() => {});
-    await interaction.reply({ content: '✅ Уведомление о принятии отправлено.', ephemeral: true });
+    await interaction.reply({ content: '✅ Статус изменён на Рассмотрение.', ephemeral: true });
+  }
+
+  // Обработка кнопки "Обзвон"
+  if (interaction.isButton() && interaction.customId.startsWith('call_app:')) {
+    const targetUserId = interaction.customId.split(':')[1];
+    const guild = interaction.guild;
+    const member = await guild.members.fetch(targetUserId).catch(() => null);
+    if (!member) return interaction.reply({ content: 'Пользователь не найден', ephemeral: true });
+
+    const embed = createStatusNotificationEmbed('обзвон', 'G A R C I A', '', guild.id);
+    await member.send({ embeds: [embed] }).catch(() => {});
+    await interaction.reply({ content: '✅ Статус изменён на Обзвон.', ephemeral: true });
+  }
+
+  // Обработка кнопки "Отклонить"
+  if (interaction.isButton() && interaction.customId.startsWith('decline_app:')) {
+    const targetUserId = interaction.customId.split(':')[1];
+    const guild = interaction.guild;
+    const member = await guild.members.fetch(targetUserId).catch(() => null);
+    if (!member) return interaction.reply({ content: 'Пользователь не найден', ephemeral: true });
+
+    const embed = createStatusNotificationEmbed('отклонено', 'G A R C I A', '', guild.id);
+    await member.send({ embeds: [embed] }).catch(() => {});
+    await interaction.reply({ content: '✅ Заявка отклонена.', ephemeral: true });
   }
 });
 
