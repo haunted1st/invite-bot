@@ -254,14 +254,17 @@ client.on('interactionCreate', async (interaction) => {
       return interaction.reply({ content: 'Не удалось найти доступные голосовые каналы для обзвона.', flags: 64 });
     }
 
+    // Создание ссылки на канал
+    const channelLink = `https://discord.com/channels/${guild.id}/${randomChannel.id}`;
+
     await interaction.reply({
-      content: `${member} был вызван на обзвон модератором ${moderator} в канал ${randomChannel}.`,
+      content: `${member} был вызван на обзвон модератором ${moderator} в канал ${randomChannel}. Ссылка на канал: [Перейти в канал](${channelLink}).`,
       flags: 64,
     });
 
     // Личное сообщение пользователю
     await member.send({
-      content: `Вы были вызваны на обзвон модератором ${moderator} в канал ${randomChannel}.`
+      content: `Вы были вызваны на обзвон модератором ${moderator} в канал ${randomChannel}. Ссылка на канал: [Перейти в канал](${channelLink}).`
     }).catch(() => {});
   }
 
