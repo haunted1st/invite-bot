@@ -293,21 +293,8 @@ if (interaction.isStringSelectMenu() && interaction.customId.startsWith('select_
     .setTimestamp();
 
   await targetUser.send({ embeds: [dmEmbed] }).catch(() => {});
-};
+}
 
-    const dmEmbed = new EmbedBuilder()
-      .setTitle('📞 Приглашение на обзвон')
-      .setDescription(
-        `Вы были вызваны на обзвон!\n\n` +
-        `Вас приглашают присоединиться к голосовому каналу:\n[${selectedChannel.name}](${voiceLink})\n\n` +
-        `**ID Дискорд сервера:** \`${guild.id}\`\n` +
-        `**Дата события:** ${now}`
-      )
-      .setColor(0x3498db)
-      .setTimestamp();
-
-    await targetUser.send({ embeds: [dmEmbed] }).catch(() => {});
-  }
 }); // <-- закрываем client.on('interactionCreate')
 
 client.login(process.env.TOKEN);
