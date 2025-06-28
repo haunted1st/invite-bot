@@ -114,30 +114,13 @@ client.once('ready', async () => {
     .setImage('https://media.discordapp.net/attachments/1300952767078203493/1388174214187581582/ezgif-61741d6e62f365.gif')
     .setColor(0x2f3136);
 
-  const selectMenu = new StringSelectMenuBuilder()
-  .setCustomId('application_type')
-  .setPlaceholder('Выберите тип заявки')
-  .addOptions([
-    {
-      label: 'Заявка в семью',
-      value: 'family_application',
-      emoji: '🧾'
-    },
-    {
-      label: 'Заявка в Main',
-      value: 'main_application',
-      emoji: '📝'
-    },
-    {
-      label: 'Заявка в Tier (soon...)',
-      value: 'tier_application',
-      emoji: '⌛',
-      description: 'Временно недоступно'
-    }
-  ]);
+  const button = new ButtonBuilder()
+    .setCustomId('open_modal')
+    .setLabel('Оставить заявку')
+    .setStyle(ButtonStyle.Primary);
 
-const row = new ActionRowBuilder().addComponents(selectMenu);
-await inviteChannel.send({ embeds: [embed], components: [row] });
+  const row = new ActionRowBuilder().addComponents(button);
+  await inviteChannel.send({ embeds: [embed], components: [row] });
 });
 
 client.on('interactionCreate', async interaction => {
