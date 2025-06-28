@@ -252,23 +252,6 @@ client.on('interactionCreate', async interaction => {
       return;
     }
 
-    ChatGPT сказал:
-Проблема в том, что у тебя два одиначных блока кода с проверкой на
-
-js
-Копировать
-Редактировать
-if (interaction.isStringSelectMenu() && interaction.customId.startsWith('select_call_channel:')) {
-и оба содержат практически одинаковые действия — поэтому после первого await targetUser.send(...) идёт повтор того же кода снова, что не должно быть.
-
-Что делать?
-Просто убери второй блок полностью — он дублирует первый.
-
-Твой исправленный код будет таким (без дублирующихся частей):
-
-js
-Копировать
-Редактировать
 if (interaction.isStringSelectMenu() && interaction.customId.startsWith('select_call_channel:')) {
   const userId = interaction.customId.split(':')[1];
   const guild = interaction.guild;
