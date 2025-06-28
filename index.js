@@ -253,46 +253,54 @@ client.on('interactionCreate', async interaction => {
     }
 
 if (interaction.isStringSelectMenu() && interaction.customId.startsWith('select_call_channel:')) {
-  const userId = interaction.customId.split(':')[1];
-  const guild = interaction.guild;
-  const targetUser = await client.users.fetch(userId).catch(() => null);
-  if (!targetUser) return interaction.reply({ content: 'Пользователь не найден.', ephemeral: true });
+  try {
+    const userId = interaction.customId.split(':')[1];
+    const guild = interaction.guild;
+    const targetUser = await client.users.fetch(userId).catch(() => null);
+    if (!targetUser) return interaction.reply({ content: 'Пользователь не найден.', ephemeral: true });
 
-  const selectedChannelId = interaction.values[0];
-  const selectedChannel = guild.channels.cache.get(selectedChannelId);
-  if (!selectedChannel || selectedChannel.type !== ChannelType.GuildVoice) {
-    return interaction.reply({ content: 'Выбранный голосовой канал не найден.', ephemeral: true });
+    const selectedChannelId = interaction.values[0];
+    const selectedChannel = guild.channels.cache.get(selectedChannelId);
+    if (!selectedChannel || selectedChannel.type !== ChannelType.GuildVoice) {
+      return interaction.reply({ content: 'Выбранный голосовой канал не найден.', ephemeral: true });
+    }
+
+    const voiceLink = `https://discord.com/channels/${guild.id}/${selectedChannel.id}`;
+    const now = `<t:${Math.floor(Date.now() / 1000)}:f>`;
+    const logChannel = guild.channels.cache.get(CHANNEL_LOG_ID);
+
+    logChannel?.send(
+      `📞 Заявка от **${targetUser.tag}** вызвана на обзвон.\n` +
+      `🔊 Канал: **${selectedChannel.name}**\n` +
+      `👤 Вызвал: ${interaction.user}\n` +
+      `🔗 ${voiceLink}`
+    );
+
+    // Вот ответ на взаимодействие, без него будет ошибка "This interaction failed"
+    await interaction.update({
+      content: `📞 Модератор ${interaction.user} вызвал ${targetUser} на обзвон в **${selectedChannel.name}**\n🔗 Ссылка: ${voiceLink}`,
+      components: []
+    });
+
+    const dmEmbed = new EmbedBuilder()
+      .setTitle('📞 Приглашение на обзвон')
+      .setDescription(
+        `Вы были вызваны на обзвон!\n\n` +
+        `Вас приглашают присоединиться к голосовому каналу:\n[${selectedChannel.name}](${voiceLink})\n\n` +
+        `**ID Дискорд сервера:** \`${guild.id}\`\n` +
+        `**Дата события:** ${now}`
+      )
+      .setColor(0x3498db)
+      .setTimestamp();
+
+    await targetUser.send({ embeds: [dmEmbed] }).catch(() => {});
+
+  } catch (error) {
+    console.error('Ошибка при обработке select_call_channel:', error);
+    if (!interaction.replied) {
+      await interaction.reply({ content: 'Произошла ошибка при обработке выбора.', ephemeral: true });
+    }
   }
-
-  const voiceLink = `https://discord.com/channels/${guild.id}/${selectedChannel.id}`;
-  const now = `<t:${Math.floor(Date.now() / 1000)}:f>`;
-  const logChannel = guild.channels.cache.get(CHANNEL_LOG_ID);
-
-  logChannel?.send(
-    `📞 Заявка от **${targetUser.tag}** вызвана на обзвон.\n` +
-    `🔊 Канал: **${selectedChannel.name}**\n` +
-    `👤 Вызвал: ${interaction.user}\n` +
-    `🔗 ${voiceLink}`
-  );
-
-  await interaction.update({
-    content: `📞 Модератор ${interaction.user} вызвал ${targetUser} на обзвон в **${selectedChannel.name}**\n🔗 Ссылка: ${voiceLink}`,
-    components: []
-  });
-}
-
-  const dmEmbed = new EmbedBuilder()
-    .setTitle('📞 Приглашение на обзвон')
-    .setDescription(
-      `Вы были вызваны на обзвон!\n\n` +
-      `Вас приглашают присоединиться к голосовому каналу:\n[${selectedChannel.name}](${voiceLink})\n\n` +
-      `**ID Дискорд сервера:** \`${guild.id}\`\n` +
-      `**Дата события:** ${now}`
-    )
-    .setColor(0x3498db)
-    .setTimestamp();
-
-  await targetUser.send({ embeds: [dmEmbed] }).catch(() => {});
 }
 
 }); // <-- закрываем client.on('interactionCreate')
