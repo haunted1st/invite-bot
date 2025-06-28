@@ -7,11 +7,21 @@ app.listen(3000, () => console.log('🌐 Express сервер запущен н�
 
 // == Импорты ==
 const {
-  Client, GatewayIntentBits, Partials,
-  EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle,
-  ActionRowBuilder, ButtonBuilder, ButtonStyle,
-  ChannelType, PermissionsBitField, InteractionType,
-  StringSelectMenuBuilder
+  Client,
+  GatewayIntentBits,
+  Partials,
+  EmbedBuilder,
+  InteractionType,
+  PermissionsBitField,
+  ChannelType,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  StringSelectMenuBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  ModalBuilder,
+  Events
 } = require('discord.js');
 
 const dayjs = require('dayjs');
