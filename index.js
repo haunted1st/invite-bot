@@ -52,6 +52,8 @@ function hasAllowedRole(member) {
   return member.roles.cache.some(role => ALLOWED_ROLES.includes(role.id));
 }
 
+const applicationsData = {};
+
 function createStatusNotificationEmbed(status, applicationName, channelName = '', guildId, applicationLink = '') {
   let color, title = '', description = '';
   const timeAgo = dayjs().fromNow();
@@ -153,6 +155,13 @@ client.on('interactionCreate', async interaction => {
       { id: user.id, allow: [PermissionsBitField.Flags.ViewChannel] },
       ...ALLOWED_ROLES.map(id => ({ id, allow: [PermissionsBitField.Flags.ViewChannel] }))
     ];
+    applicationsData[user.id] = values;
+    const overwrites = [
+      { id: guild.roles.everyone, deny: [PermissionsBitField.Flags.ViewChannel] },
+      { id: user.id, allow: [PermissionsBitField.Flags.ViewChannel] },
+      ...ALLOWED_ROLES.map(id => ({ id, allow: [PermissionsBitField.Flags.ViewChannel] }))
+    ];
+    
     const channel = await guild.channels.create({
       name: `заявка-${user.username}`.toLowerCase().replace(/[^a-z0-9а-яё\-]/gi, '-'),
       type: ChannelType.GuildText,
@@ -163,11 +172,11 @@ client.on('interactionCreate', async interaction => {
     const embed = new EmbedBuilder()
       .setTitle('📨 Заявка')
       .addFields(
-        { name: 'Никнейм и статик', value: values.nickname },
-        { name: 'IRL имя и возраст', value: values.irl },
-        { name: 'Семьи ранее', value: values.history },
-        { name: 'Сервера', value: values.servers },
-        { name: 'Откаты стрельбы', value: values.recoil },
+        { name: 'Никнейм | статик', value: values.nickname },
+        { name: 'IRL Имя | возраст', value: values.irl },
+        { name: 'В каких семьях состояли ранее', value: values.history },
+        { name: 'На каких серверах вкачаны персонажи?', value: values.servers },
+        { name: 'Откаты стрельбы (YouTube / Rutube)', value: values.recoil },
         { name: 'Пользователь', value: `<@${user.id}>` }
       )
       .setFooter({ text: `ID: ${user.id}` })
@@ -213,16 +222,38 @@ client.on('interactionCreate', async interaction => {
       return interaction.reply({ content: 'У вас нет прав для этого действия.', ephemeral: true });
     }
 
-    if (action === 'accept_app') {
+   if (action === 'accept_app') {
       await interaction.update({ content: `Заявка **принята** ${interaction.user}`, components: [] });
       await targetUser.send(`Ваша заявка была **принята**!`).catch(() => {});
-      logChannel?.send(`✅ Заявка от ${targetUser.tag} принята модератором ${interaction.user.tag}`);
-      acceptChannel?.send(`✅ Заявка от ${targetUser} принята модератором ${interaction.user}`);
-      await appChannel.send(`✅ Заявка от ${targetUser} принята модератором ${interaction.user}`);
+      logChannel?.send(`✅ Заявка от <@${targetUser.id}> принята модератором <@${interaction.user.id}>`);
+
+      const values = applicationsData[userId];
+      if (values) {
+        const acceptEmbed = new EmbedBuilder()
+          .setTitle('✅ Заявка принята')
+          .setColor(0x2ecc71)
+          .addFields(
+            { name: 'Никнейм | статик', value: values.nickname || '—' },
+            { name: 'IRL Имя | возраст', value: values.irl || '—' },
+            { name: 'В каких семьях состояли ранее? ( Подробнее )', value: values.history || '—' },
+            { name: 'На каких серверах вкачаны персонажи?', value: values.servers || '—' },
+            { name: 'Откаты стрельбы (YouTube / Rutube)', value: values.recoil || '—' },
+            { name: 'Пользователь', value: `<@${targetUser.id}>` },
+            { name: 'Username', value: targetUser.username },
+            { name: 'ID', value: targetUser.id },
+            { name: 'Кого', value: `<@${targetUser.id}>` },
+            { name: 'Принял', value: `${interaction.user}` },
+            { name: 'Время', value: `<t:${Math.floor(Date.now() / 1000)}:f>` }
+          );
+        acceptChannel?.send({ embeds: [acceptEmbed] });
+      }
+
+      await appChannel.send(`✅ Заявка от <@${targetUser.id}> принята модератором ${interaction.user}`);
       return;
     }
 
     if (action === 'decline_app') {
+      // Показываем модальное окно для ввода причины отклонения
       const modal = new ModalBuilder()
         .setCustomId(`decline_reason:${userId}`)
         .setTitle('Причина отклонения заявки');
@@ -261,6 +292,40 @@ client.on('interactionCreate', async interaction => {
       await interaction.reply({ content: 'Выберите голосовой канал для обзвона:', components: [row], ephemeral: true });
       return;
     }
+  }
+   if (interaction.type === InteractionType.ModalSubmit && interaction.customId.startsWith('decline_reason:')) {
+    const userId = interaction.customId.split(':')[1];
+    const reason = interaction.fields.getTextInputValue('reason');
+
+    const guild = interaction.guild;
+    const declineChannel = guild.channels.cache.get(CHANNEL_DECLINE_ID);
+    const targetUser = await client.users.fetch(userId).catch(() => null);
+    if (!targetUser) return interaction.reply({ content: 'Пользователь не найден.', ephemeral: true });
+
+    const values = applicationsData[userId];
+    if (values) {
+      const declineEmbed = new EmbedBuilder()
+        .setTitle('❌ Заявка отклонена')
+        .setColor(0xe74c3c)
+        .addFields(
+          { name: 'Ваш никнейм и статик', value: values.nickname || '—' },
+          { name: 'IRL Имя и возраст', value: values.irl || '—' },
+          { name: 'В каких семьях состояли ранее? ( Подробнее )', value: values.history || '—' },
+          { name: 'На каких серверах вкачаны персы?', value: values.servers || '—' },
+          { name: 'Откаты стрельбы с GunGame ( От 5 мин )', value: values.recoil || '—' },
+          { name: 'Пользователь', value: `<@${targetUser.id}>` },
+          { name: 'Username', value: targetUser.username },
+          { name: 'ID', value: targetUser.id },
+          { name: 'Кого', value: `<@${targetUser.id}>` },
+          { name: 'Отклонил', value: `${interaction.user}` },
+          { name: 'Причина', value: reason },
+          { name: 'Время', value: `<t:${Math.floor(Date.now() / 1000)}:f>` }
+        );
+      declineChannel?.send({ embeds: [declineEmbed] });
+    }
+
+    await interaction.reply({ content: `Заявка отклонена с причиной: ${reason}`, ephemeral: true });
+    return;
   }
 
   if (interaction.isStringSelectMenu() && interaction.customId.startsWith('select_call_channel:')) {
