@@ -151,23 +151,18 @@ client.on('interactionCreate', async interaction => {
       recoil: interaction.fields.getTextInputValue('recoil_links')
     };
     const overwrites = [
-      { id: guild.roles.everyone, deny: [PermissionsBitField.Flags.ViewChannel] },
-      { id: user.id, allow: [PermissionsBitField.Flags.ViewChannel] },
-      ...ALLOWED_ROLES.map(id => ({ id, allow: [PermissionsBitField.Flags.ViewChannel] }))
-    ];
-    applicationsData[user.id] = values;
-    const overwrites = [
-      { id: guild.roles.everyone, deny: [PermissionsBitField.Flags.ViewChannel] },
-      { id: user.id, allow: [PermissionsBitField.Flags.ViewChannel] },
-      ...ALLOWED_ROLES.map(id => ({ id, allow: [PermissionsBitField.Flags.ViewChannel] }))
-    ];
-    
-    const channel = await guild.channels.create({
-      name: `заявка-${user.username}`.toLowerCase().replace(/[^a-z0-9а-яё\-]/gi, '-'),
-      type: ChannelType.GuildText,
-      parent: CATEGORY_ID,
-      permissionOverwrites: overwrites
-    });
+  { id: guild.roles.everyone, deny: [PermissionsBitField.Flags.ViewChannel] },
+  { id: user.id, allow: [PermissionsBitField.Flags.ViewChannel] },
+  ...ALLOWED_ROLES.map(id => ({ id, allow: [PermissionsBitField.Flags.ViewChannel] }))
+];
+applicationsData[user.id] = values;
+
+const channel = await guild.channels.create({
+  name: `заявка-${user.username}`.toLowerCase().replace(/[^a-z0-9а-яё\-]/gi, '-'),
+  type: ChannelType.GuildText,
+  parent: CATEGORY_ID,
+  permissionOverwrites: overwrites
+});
 
     const embed = new EmbedBuilder()
       .setTitle('📨 Заявка')
