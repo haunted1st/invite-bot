@@ -266,10 +266,14 @@ const channel = await guild.channels.create({
     if (action === 'review_app') {
       await interaction.update({ content: `Заявка **на рассмотрении**. Ответственный: ${interaction.user}`, components: [] });
       await targetUser.send(`Ваша заявка взята на рассмотрение модератором ${interaction.user.tag}`).catch(() => {});
-      logChannel?.send(`⚠️ Заявка от <@${targetUser.id}> взята на рассмотрение <@${interaction.user.id}>`);
-      await appChannel.send(`⚠️ Модератор ${interaction.user} взял заявку на рассмотрение.`);
-      return;
-    }
+      logChannel?.send(
+    `⚠️ Заявка от <@${targetUser.id}> взята на рассмотрение <@${interaction.user.id}>\n` +
+    `🔗 Ссылка на заявку: https://discord.com/channels/${guild.id}/${appChannel.id}`
+  );
+    await appChannel.send(`⚠️ Модератор ${interaction.user} взял заявку на рассмотрение.`);
+
+    return;
+   }
 
     if (action === 'call_app') {
       const voiceChannels = voiceChannelIdsForCall
