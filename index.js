@@ -36,16 +36,20 @@ const client = new Client({
 });
 
 const CATEGORY_ID = '1200037290538451095';
-const ROLES_ACCESS_IDS = [
-  '1203016198850355231', // роль для High PR
-  '1203021666800902184',  // роль для PR
-];
-const CHANNEL_ACCEPT_ID = '1386830144789942272'; // Канал для принятия заявок
-const CHANNEL_DECLINE_ID = '1386830559136714825'; // Канал для отклонения заявок
-const CHANNEL_LOG_ID = '1304923881294925876'; // Канал логов
-const INVITE_CHANNEL_ID = '1387148896320487564'; // Канал приглашений
-const VOICE_CATEGORY_ID = '1203018614253555812'; // ID категории для голосовых каналов
+const CHANNEL_ACCEPT_ID = '1386830144789942272';
+const CHANNEL_DECLINE_ID = '1386830559136714825';
+const CHANNEL_LOG_ID = '1304923881294925876';
+const INVITE_CHANNEL_ID = '1387148896320487564';
 
+// Роли, которым можно видеть заявки и управлять ими
+const ALLOWED_ROLES = ['1203016198850355231', '1203021666800902184']; // PR и High PR
+
+// Жёстко заданные голосовые каналы для обзвона
+const voiceChannelIdsForCall = [
+  '1203029383871463444',
+  '1386828355499851806',
+  '1327303833491345419'
+];
 // Функция создания уведомления о статусе заявки
 function createStatusNotificationEmbed(status, applicationName, channelName = '', guildId, applicationLink = '') {
   let color;
