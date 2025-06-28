@@ -197,8 +197,7 @@ client.on('interactionCreate', async interaction => {
   client.on('interactionCreate', async interaction => {
   if (interaction.isButton()) {
     const [action, userId] = interaction.customId.split(':');
-    if (!['accept_app', 'decline_app', 'review_app', 'call_app'].includes(action)) return
-});
+    if (!['accept_app', 'decline_app', 'review_app', 'call_app'].includes(action)) return;
 
     const guild = interaction.guild;
     const logChannel = guild.channels.cache.get(CHANNEL_LOG_ID);
@@ -214,108 +213,29 @@ client.on('interactionCreate', async interaction => {
       return interaction.reply({ content: 'У вас нет прав для этого действия.', ephemeral: true });
     }
 
-   if (action === 'accept_app') {
-  await interaction.update({ content: `Заявка **принята** ${interaction.user}`, components: [] });
-  await targetUser.send(`Ваша заявка была **принята**!`).catch(() => {});
-
-  const logChannel = guild.channels.cache.get('1386830144789942272'); // Канал для детального лога
-
-  if (!logChannel) {
-    console.error('Канал для логов не найден');
-  } else {
-    // Получаем последние 10 сообщений в канале заявки
-    const messages = await appChannel.messages.fetch({ limit: 10 });
-    const appEmbedMsg = messages.find(msg => msg.embeds.length > 0);
-
-    const fields = appEmbedMsg?.embeds[0]?.fields || [];
-
-    // Составляем объект для удобства
-    const fieldData = {};
-    for (const field of fields) {
-      fieldData[field.name] = field.value;
+    if (action === 'accept_app') {
+      await interaction.update({ content: `Заявка **принята** ${interaction.user}`, components: [] });
+      await targetUser.send(`Ваша заявка была **принята**!`).catch(() => {});
+      logChannel?.send(`✅ Заявка от ${targetUser.tag} принята модератором ${interaction.user.tag}`);
+      acceptChannel?.send(`✅ Заявка от ${targetUser} принята модератором ${interaction.user}`);
+      await appChannel.send(`✅ Заявка от ${targetUser} принята модератором ${interaction.user}`);
+      return;
     }
 
-    // Формируем embed для лога
-    const logEmbed = new EmbedBuilder()
-      .setTitle('📨 Заявка принята')
-      .addFields(
-        { name: 'Никнейм | статик', value: fieldData['Никнейм и статик'] || '—', inline: false },
-        { name: 'IRL Имя | возраст', value: fieldData['IRL имя и возраст'] || '—', inline: false },
-        { name: 'В каких семьях состояли ранее? ( Подробнее )', value: fieldData['Семьи ранее'] || '—', inline: false },
-        { name: 'На каких серверах вкачаны персонажи?', value: fieldData['Сервера'] || '—', inline: false },
-        { name: 'Откаты стрельбы (YouTube / Rutube)', value: fieldData['Откаты стрельбы'] || '—', inline: false },
-        { name: 'Пользователь', value: fieldData['Пользователь'] || '—', inline: false },
-        { name: 'Username', value: targetUser.username, inline: true },
-        { name: 'ID', value: targetUser.id, inline: true },
-        { name: 'Кого', value: `<@${targetUser.id}>`, inline: true },
-        { name: 'Принял', value: `<@${interaction.user.id}>`, inline: true },
-        { name: 'Время принятия', value: `<t:${Math.floor(Date.now() / 1000)}:f>`, inline: true },
-      )
-      .setColor(0x00ff00)
-      .setTimestamp();
-
-    await logChannel.send({ embeds: [logEmbed] });
-  }
-
-  logChannel?.send(`✅ Заявка от ${targetUser.tag} принята модератором ${interaction.user.tag}`);
-  acceptChannel?.send(`✅ Заявка от ${targetUser} принята модератором ${interaction.user}`);
-  await appChannel.send(`✅ Заявка от ${targetUser} принята модератором ${interaction.user}`);
-
-  return;
-}
-
-    if (interaction.type === InteractionType.ModalSubmit && interaction.customId.startsWith('decline_reason:')) {
-  await interaction.deferReply({ ephemeral: true });
-
-  const userId = interaction.customId.split(':')[1];
-  const reason = interaction.fields.getTextInputValue('reason');
-
-  const guild = interaction.guild;
-  const logChannel = guild.channels.cache.get('1386830144789942272'); // ID канала логов
-  const targetUser = await client.users.fetch(userId).catch(() => null);
-  if (!targetUser) {
-    return interaction.editReply({ content: 'Пользователь не найден.' });
-  }
-
-  const appChannel = interaction.channel;
-
-  // Получаем последние сообщения, чтобы найти embed заявки
-  const messages = await appChannel.messages.fetch({ limit: 10 });
-  const appEmbedMsg = messages.find(msg => msg.embeds.length > 0);
-
-  const fields = appEmbedMsg?.embeds[0]?.fields || [];
-  const fieldData = {};
-  for (const field of fields) {
-    fieldData[field.name] = field.value;
-  }
-
-  if (!logChannel) {
-    console.error('Канал для логов не найден');
-  } else {
-    const logEmbed = new EmbedBuilder()
-      .setTitle('❌ Заявка отклонена')
-      .addFields(
-        { name: 'Ваш никнейм и статик', value: fieldData['Никнейм и статик'] || '—', inline: false },
-        { name: 'IRL Имя и возраст', value: fieldData['IRL имя и возраст'] || '—', inline: false },
-        { name: 'В каких семьях состояли ранее? ( Подробнее )', value: fieldData['Семьи ранее'] || '—', inline: false },
-        { name: 'На каких серверах вкачаны персы?', value: fieldData['Сервера'] || '—', inline: false },
-        { name: 'Откаты стрельбы с GunGame ( От 5 мин )', value: fieldData['Откаты стрельбы'] || '—', inline: false },
-        { name: 'Пользователь', value: fieldData['Пользователь'] || '—', inline: false },
-        { name: 'Username', value: targetUser.username, inline: true },
-        { name: 'ID', value: targetUser.id, inline: true },
-        { name: 'Кого', value: `<@${targetUser.id}>`, inline: true },
-        { name: 'Отклонил', value: `<@${interaction.user.id}>`, inline: true },
-        { name: 'Причина', value: reason, inline: false },
-        { name: 'Время отклонения', value: `<t:${Math.floor(Date.now() / 1000)}:f>`, inline: true },
-      )
-      .setColor(0xff0000)
-      .setTimestamp();
-
-    await logChannel.send({ embeds: [logEmbed] });
-  }
-
-  await interaction.editReply({ content: 'Заявка успешно отклонена и причина отправлена в лог.' });
-}
+    if (action === 'decline_app') {
+      const modal = new ModalBuilder()
+        .setCustomId(`decline_reason:${userId}`)
+        .setTitle('Причина отклонения заявки');
+      const reasonInput = new TextInputBuilder()
+        .setCustomId('reason')
+        .setLabel('Причина')
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder('Опишите причину отклонения')
+        .setRequired(true);
+      modal.addComponents(new ActionRowBuilder().addComponents(reasonInput));
+      await interaction.showModal(modal);
+      return;
+    }
 
     if (action === 'review_app') {
       await interaction.update({ content: `Заявка **на рассмотрении**. Ответственный: ${interaction.user}`, components: [] });
@@ -361,16 +281,16 @@ client.on('interactionCreate', async interaction => {
       const logChannel = guild.channels.cache.get(CHANNEL_LOG_ID);
 
       logChannel?.send(
-  `📞 Заявка от <@${targetUser.id}> вызвана на обзвон.\n` +
-  `🔊 Канал: **${selectedChannel.name}**\n` +
-  `👤 Вызвал: ${interaction.user}\n` +
-  `🔗 ${voiceLink}`
-);
+        `📞 Заявка от **<@${targetUser.id}>** вызвана на обзвон.\n` +
+        `🔊 Канал: **${selectedChannel.name}**\n` +
+        `👤 Вызвал: <@${interaction.user.id}> ${interaction.user.tag}\n` +
+        `🔗 ${voiceLink}`
+      );
 
       await interaction.update({
-      content: `📞 Модератор ${interaction.user} вызвал ${targetUser} на обзвон в **${selectedChannel.name}**\n🔗 Ссылка: ${selectedChannel}`,
-      components: []
-    });
+        content: `📞 Модератор <@${interaction.user.id}> вызвал <@${targetUser.id}> на обзвон в **${selectedChannel.name}**\n🔗 Ссылка: ${voiceLink}`,
+        components: []
+      });
 
       const dmEmbed = new EmbedBuilder()
         .setTitle('📞 Приглашение на обзвон')
@@ -392,6 +312,6 @@ client.on('interactionCreate', async interaction => {
       }
     }
   }
-}); // <-- закрываем client.on('interactionCreate')
+}); // закрываем client.on('interactionCreate')
 
 client.login(process.env.TOKEN);
