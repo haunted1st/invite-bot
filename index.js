@@ -278,9 +278,9 @@ client.on('interactionCreate', async interaction => {
 );
 
       await interaction.update({
-        content: `📞 Модератор ${interaction.user} вызвал ${targetUser} на обзвон в **${selectedChannel.name}**\n🔗 Ссылка: ${voiceLink}`,
-        components: []
-      });
+      content: `📞 Модератор ${interaction.user} вызвал ${targetUser} на обзвон в **${selectedChannel.name}**\n🔗 Ссылка: ${selectedChannel}`,
+      components: []
+    });
 
       const dmEmbed = new EmbedBuilder()
         .setTitle('📞 Приглашение на обзвон')
