@@ -309,11 +309,35 @@ client.on('interactionCreate', async interaction => {
       return interaction.reply({ content: 'Выбранный голосовой канал не найден.', ephemeral: true });
     }
 
+    const voiceLink = `https://discord.com/channels/${guild.id}/${selectedChannel.id}`;
+    const now = `<t:${Math.floor(Date.now() / 1000)}:f>`;
     const logChannel = guild.channels.cache.get(CHANNEL_LOG_ID);
-    logChannel?.send(`📞 Обзвон заявки от ${targetUser.tag} будет в голосовом канале ${selectedChannel.name} (назначил ${interaction.user.tag})`);
-    await interaction.update({ content: `📞 Обзвон будет проходить в голосовом канале: **${selectedChannel.name}**`, components: [] });
-    await targetUser.send(`Вы были вызваны на обзвон в канал **${selectedChannel.name}** модератором ${interaction.user.tag}.`).catch(() => {});
+
+    logChannel?.send(
+      `📞 Заявка от **${targetUser.tag}** вызвана на обзвон.\n` +
+      `🔊 Канал: **${selectedChannel.name}**\n` +
+      `👤 Вызвал: ${interaction.user}\n` +
+      `🔗 ${voiceLink}`
+    );
+
+    await interaction.update({
+      content: `📞 Модератор ${interaction.user} вызвал ${targetUser} на обзвон в **${selectedChannel.name}**\n🔗 Ссылка: ${voiceLink}`,
+      components: []
+    });
+
+    const dmEmbed = new EmbedBuilder()
+      .setTitle('📞 Приглашение на обзвон')
+      .setDescription(
+        `Вы были вызваны на обзвон!\n\n` +
+        `Вас приглашают присоединиться к голосовому каналу:\n[${selectedChannel.name}](${voiceLink})\n\n` +
+        `**ID Дискорд сервера:** \`${guild.id}\`\n` +
+        `**Дата события:** ${now}`
+      )
+      .setColor(0x3498db)
+      .setTimestamp();
+
+    await targetUser.send({ embeds: [dmEmbed] }).catch(() => {});
   }
-}); // <-- закрываем client.on('interactionCreate')
+});; // <-- закрываем client.on('interactionCreate')
 
 client.login(process.env.TOKEN);
