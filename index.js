@@ -170,8 +170,7 @@ const channel = await guild.channels.create({
         { name: 'Ник | статик на Phoenix | Имя и Возраст', value: values.nickname },
         { name: 'На каких серверах прокачены персы?', value: values.irl },
         { name: 'Ваш часовой пояс | Ежедневный онлайн', value: values.history },
-        { name: 'На каких серверах вкачаны персонажи?', value: values.servers },
-        { name: 'Были ли в семьях? Почему выбрали нас?', value: values.recoil },
+        { name: 'Были ли в семьях? Почему выбрали нас?', value: values.servers },
         { name: 'Откаты стрельбы (YouTube / Rutube)', value: values.recoil },
         { name: 'Пользователь', value: `<@${user.id}>` }
       )
