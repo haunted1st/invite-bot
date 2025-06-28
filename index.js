@@ -328,6 +328,7 @@ const channel = await guild.channels.create({
   const reason = interaction.fields.getTextInputValue('reason');
 
   const guild = interaction.guild;
+  const appChannel = interaction.channel;
   const declineChannel = guild.channels.cache.get(CHANNEL_DECLINE_ID);
   const targetUser = await client.users.fetch(userId).catch(() => null);
   if (!targetUser) return interaction.reply({ content: 'Пользователь не найден.', ephemeral: true });
