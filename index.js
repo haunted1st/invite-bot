@@ -28,6 +28,8 @@ const dayjs = require('dayjs');
 const relativeTime = require('dayjs/plugin/relativeTime');
 dayjs.extend(relativeTime);
 
+const applicationsData = {};
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -218,34 +220,48 @@ const channel = await guild.channels.create({
     }
 
    if (action === 'accept_app') {
-      await interaction.update({ content: `Заявка **принята** ${interaction.user}`, components: [] });
-      await targetUser.send(`Ваша заявка была **принята**!`).catch(() => {});
-      logChannel?.send(`✅ Заявка от <@${targetUser.id}> принята модератором <@${interaction.user.id}>`);
+  await interaction.update({ content: `Заявка **принята** ${interaction.user}`, components: [] });
 
-      const values = applicationsData[userId];
-      if (values) {
-        const acceptEmbed = new EmbedBuilder()
-          .setTitle('✅ Заявка принята')
-          .setColor(0x2ecc71)
-          .addFields(
-            { name: 'Никнейм | статик', value: values.nickname || '—' },
-            { name: 'IRL Имя | возраст', value: values.irl || '—' },
-            { name: 'В каких семьях состояли ранее? ( Подробнее )', value: values.history || '—' },
-            { name: 'На каких серверах вкачаны персонажи?', value: values.servers || '—' },
-            { name: 'Откаты стрельбы (YouTube / Rutube)', value: values.recoil || '—' },
-            { name: 'Пользователь', value: `<@${targetUser.id}>` },
-            { name: 'Username', value: targetUser.username },
-            { name: 'ID', value: targetUser.id },
-            { name: 'Кого', value: `<@${targetUser.id}>` },
-            { name: 'Принял', value: `${interaction.user}` },
-            { name: 'Время', value: `<t:${Math.floor(Date.now() / 1000)}:f>` }
-          );
-        acceptChannel?.send({ embeds: [acceptEmbed] });
-      }
+  const now = Math.floor(Date.now() / 1000);
 
-      await appChannel.send(`✅ Заявка от <@${targetUser.id}> принята модератором ${interaction.user}`);
-      return;
-    }
+  const dmEmbed = new EmbedBuilder()
+    .setTitle('✅ Принятие заявки')
+    .setDescription(
+      `Ваша заявка в **G A R C I A** принята!\n\n` +
+      `**ID Дискорд сервера:** \`${guild.id}\`\n` +
+      `**Дата принятия:** <t:${now}:R>`
+    )
+    .setColor(0x2ecc71)
+    .setTimestamp();
+
+  await targetUser.send({ embeds: [dmEmbed] }).catch(() => {}); // <- это DM сообщение
+
+  logChannel?.send(`✅ Заявка от <@${targetUser.id}> принята модератором <@${interaction.user.id}>`);
+
+  const values = applicationsData[userId];
+  if (values) {
+    const acceptEmbed = new EmbedBuilder()
+      .setTitle('✅ Заявка принята')
+      .setColor(0x2ecc71)
+      .addFields(
+        { name: 'Никнейм | статик', value: values.nickname || '—' },
+        { name: 'IRL Имя | возраст', value: values.irl || '—' },
+        { name: 'В каких семьях состояли ранее? ( Подробнее )', value: values.history || '—' },
+        { name: 'На каких серверах вкачаны персонажи?', value: values.servers || '—' },
+        { name: 'Откаты стрельбы (YouTube / Rutube)', value: values.recoil || '—' },
+        { name: 'Пользователь', value: `<@${targetUser.id}>` },
+        { name: 'Username', value: targetUser.username },
+        { name: 'ID', value: targetUser.id },
+        { name: 'Кого', value: `<@${targetUser.id}>` },
+        { name: 'Принял', value: `<@${interaction.user.id}>` },
+        { name: 'Время', value: `<t:${now}:f>` }
+      );
+    acceptChannel?.send({ embeds: [acceptEmbed] });
+  }
+
+  await appChannel.send(`✅ Заявка от <@${targetUser.id}> принята модератором ${interaction.user}`);
+  return;
+}
 
     if (action === 'decline_app') {
       // Показываем модальное окно для ввода причины отклонения
@@ -264,16 +280,33 @@ const channel = await guild.channels.create({
     }
 
     if (action === 'review_app') {
-      await interaction.update({ content: `Заявка **на рассмотрении**. Ответственный: ${interaction.user}`, components: interaction.message.components });
-      await targetUser.send(`Ваша заявка взята на рассмотрение модератором ${interaction.user.tag}`).catch(() => {});
-      logChannel?.send(
+  await interaction.update({
+    content: `Заявка **на рассмотрении**. Ответственный: ${interaction.user}`,
+    components: interaction.message.components
+  });
+
+  const reviewDM = new EmbedBuilder()
+    .setTitle('📥 Рассмотрение заявки')
+    .setDescription(
+      `Ваша заявка в **G A R C I A** взята на рассмотрение!\n\n` +
+      `**Ссылка на заявку:** ${appChannel?.toString()}\n` +
+      `**ID Дискорд сервера:** \`${guild.id}\`\n` +
+      `**Дата события:** <t:${Math.floor(Date.now() / 1000)}:R>`
+    )
+    .setColor(0x3498db) // синий
+    .setTimestamp();
+
+  await targetUser.send({ embeds: [reviewDM] }).catch(() => {});
+
+  logChannel?.send(
     `⚠️ Заявка от <@${targetUser.id}> взята на рассмотрение <@${interaction.user.id}>\n` +
     `🔗 Ссылка на заявку: https://discord.com/channels/${guild.id}/${appChannel.id}`
   );
-    await appChannel.send(`⚠️ Модератор ${interaction.user} взял заявку на рассмотрение.`);
 
-    return;
-   }
+  await appChannel.send(`⚠️ Модератор ${interaction.user} взял заявку на рассмотрение.`);
+
+  return;
+}
 
     if (action === 'call_app') {
       const voiceChannels = voiceChannelIdsForCall
