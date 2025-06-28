@@ -35,7 +35,7 @@ const CHANNEL_ACCEPT_ID = '1386830144789942272';
 const CHANNEL_DECLINE_ID = '1386830559136714825';
 const CHANNEL_LOG_ID = '1304923881294925876';
 const INVITE_CHANNEL_ID = '1387148896320487564';
-const ALLOWED_ROLES = ['1203016198850355231', '1203021666800902184']; // PR и High PR
+const ALLOWED_ROLES = ['1203016198850355231', '1203021666800902184', '1200040982746517595', '1200045928460058768' ]; // PR и High PR
 const voiceChannelIdsForCall = ['1203029383871463444', '1386828355499851806', '1327303833491345419'];
 
 function hasAllowedRole(member) {
@@ -171,7 +171,7 @@ client.on('interactionCreate', async interaction => {
       new ButtonBuilder().setCustomId(`decline_app:${user.id}`).setLabel('Отклонить').setStyle(ButtonStyle.Danger)
     );
 
-    const rolesToMention = ALLOWED_ROLES;
+    const rolesToMention = ['1203016198850355200', '1203021666800902100'];
 
     await channel.send({
       content: rolesToMention.map(id => `<@&${id}>`).join(' '),
@@ -248,7 +248,51 @@ client.on('interactionCreate', async interaction => {
       await interaction.reply({ content: 'Выберите голосовой канал для обзвона:', components: [row], ephemeral: true });
       return;
     }
+
+    if (interaction.isStringSelectMenu() && interaction.customId.startsWith('select_call_channel:')) {
+  const userId = interaction.customId.split(':')[1];
+  const guild = interaction.guild;
+  const targetUser = await client.users.fetch(userId).catch(() => null);
+  if (!targetUser) return interaction.reply({ content: 'Пользователь не найден.', ephemeral: true });
+
+  const selectedChannelId = interaction.values[0];
+  const selectedChannel = guild.channels.cache.get(selectedChannelId);
+  if (!selectedChannel || selectedChannel.type !== ChannelType.GuildVoice) {
+    return interaction.reply({ content: 'Выбранный голосовой канал не найден.', ephemeral: true });
   }
+
+  const voiceLink = `https://discord.com/channels/${guild.id}/${selectedChannel.id}`;
+  const now = `<t:${Math.floor(Date.now() / 1000)}:f>`;
+  const logChannel = guild.channels.cache.get(CHANNEL_LOG_ID);
+
+  // В лог-канал
+  logChannel?.send(
+    `📞 Заявка от **${targetUser.tag}** вызвана на обзвон.\n` +
+    `🔊 Канал: **${selectedChannel.name}**\n` +
+    `👤 Вызвал: ${interaction.user}\n` +
+    `🔗 ${voiceLink}`
+  );
+
+  // В канал заявки
+  await interaction.update({
+    content: `📞 Модератор ${interaction.user} вызвал ${targetUser} на обзвон в **${selectedChannel.name}**\n🔗 Ссылка: ${voiceLink}`,
+    components: []
+  });
+
+  // В личные сообщения пользователю
+  const dmEmbed = new EmbedBuilder()
+    .setTitle('📞 Приглашение на обзвон')
+    .setDescription(
+      `Вы были вызваны на обзвон!\n\n` +
+      `Вас приглашают присоединиться к голосовому каналу:\n[${selectedChannel.name}](${voiceLink})\n\n` +
+      `**ID Дискорд сервера:** \`${guild.id}\`\n` +
+      `**Дата события:** ${now}`
+    )
+    .setColor(0x3498db)
+    .setTimestamp();
+
+  await targetUser.send({ embeds: [dmEmbed] }).catch(() => {});
+}
 
   if (interaction.isStringSelectMenu() && interaction.customId.startsWith('select_call_channel:')) {
     const userId = interaction.customId.split(':')[1];
