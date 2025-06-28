@@ -184,6 +184,7 @@ client.on('interactionCreate', async interaction => {
 });
 
   // Обработка кнопок
+  client.on('interactionCreate', async interaction => {
   if (interaction.isButton()) {
     const [action, userId] = interaction.customId.split(':');
     if (!['accept_app', 'decline_app', 'review_app', 'call_app'].includes(action)) return;
