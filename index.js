@@ -119,7 +119,7 @@ client.on('interactionCreate', async interaction => {
       { id: 'irl_name_age', label: 'IRL Имя | возраст', style: TextInputStyle.Short, placeholder: 'Тима | 20' },
       { id: 'family_history', label: 'В каких семьях состояли ранее', style: TextInputStyle.Paragraph, placeholder: 'Укажите, если были в других семьях' },
       { id: 'servers', label: 'На каких серверах вкачаны персонажи?', style: TextInputStyle.Short, placeholder: '06, 11, 15' },
-      { id: 'recoil_links', label: 'Откаты стрельбы (YouTube / Rutube)', style: TextInputStyle.Paragraph, placeholder: 'https://...' }
+      { id: 'recoil_links', label: 'Откаты стрельбы (YouTube / Rutube)', style: TextInputStyle.Paragraph, placeholder: 'https://youtube.com..' }
     ];
     modal.addComponents(...fields.map(f => new ActionRowBuilder().addComponents(
       new TextInputBuilder().setCustomId(f.id).setLabel(f.label).setStyle(f.style).setPlaceholder(f.placeholder).setRequired(true)
