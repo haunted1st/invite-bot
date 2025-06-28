@@ -259,11 +259,11 @@ if (interaction.isButton()) {
       return interaction.reply({ content: 'Выбранный голосовой канал не найден.', ephemeral: true });
     }
 
-    const logChannel = guild.channels.cache.get(CHANNEL_LOG_ID);
-    logChannel?.send(`📞 Обзвон заявки от ${targetUser.tag} будет в голосовом канале ${selectedChannel.name} (назначил ${interaction.user.tag})`);
-    await interaction.update({ content: `📞 Обзвон будет проходить в голосовом канале: **${selectedChannel.name}**`, components: [] });
-    await targetUser.send(`Вы были вызваны на обзвон в канал **${selectedChannel.name}** модератором ${interaction.user.tag}.`).catch(() => {});
+  const logChannel = guild.channels.cache.get(CHANNEL_LOG_ID);
+  logChannel?.send(`📞 Обзвон заявки от ${targetUser.tag} будет в голосовом канале ${selectedChannel.name} (назначил ${interaction.user.tag})`);
+  await interaction.update({ content: `📞 Обзвон будет проходить в голосовом канале: **${selectedChannel.name}**`, components: [] });
+  await targetUser.send(`Вы были вызваны на обзвон в канал **${selectedChannel.name}** модератором ${interaction.user.tag}.`).catch(() => {});
   }
-});
+  });
 
 client.login(process.env.TOKEN);
