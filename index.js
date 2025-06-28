@@ -292,7 +292,7 @@ if (interaction.isStringSelectMenu() && interaction.customId.startsWith('select_
     .setTimestamp();
 
   await targetUser.send({ embeds: [dmEmbed] }).catch(() => {});
-});
+};
 
     const dmEmbed = new EmbedBuilder()
       .setTitle('📞 Приглашение на обзвон')
