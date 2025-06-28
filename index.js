@@ -279,6 +279,7 @@ if (interaction.isStringSelectMenu() && interaction.customId.startsWith('select_
     content: `📞 Модератор ${interaction.user} вызвал ${targetUser} на обзвон в **${selectedChannel.name}**\n🔗 Ссылка: ${voiceLink}`,
     components: []
   });
+}
 
   const dmEmbed = new EmbedBuilder()
     .setTitle('📞 Приглашение на обзвон')
