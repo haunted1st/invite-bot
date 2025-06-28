@@ -175,7 +175,7 @@ const channel = await guild.channels.create({
         { name: 'Пользователь', value: `<@${user.id}>` }
       )
       .setFooter({ text: `ID: ${user.id}` })
-      .setColor(0x2f3136)
+      .setColor(0xFFFF00)
       .setTimestamp();
 
     const buttons = new ActionRowBuilder().addComponents(
