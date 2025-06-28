@@ -367,7 +367,12 @@ const channel = await guild.channels.create({
     await targetUser.send({ embeds: [dmEmbed] }).catch(() => {});
   }
 
-  await interaction.reply({ content: `Заявка отклонена с причиной: ${reason}`, ephemeral: true });
+  await interaction.reply({ content: `Заявка отклонена. Канал будет удалён через 5 секунд.`, ephemeral: true });
+
+  setTimeout(() => {
+    appChannel.delete().catch(() => {});
+  }, 5000); // задержка, чтобы успел увидеть сообщение
+
   return;
 }
 
