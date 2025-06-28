@@ -130,7 +130,7 @@ client.on('interactionCreate', async interaction => {
       { id: 'nickname_stat', label: 'Ник | статик на Phoenix | Имя и Возраст', style: TextInputStyle.Short, placeholder: 'Sky Garcia | 100000 | Тима 20' },
       { id: 'irl_name_age', label: 'На каких серверах прокачены персы?', style: TextInputStyle.Short, placeholder: '06, 11, 15...' },
       { id: 'family_history', label: 'Ваш часовой пояс | Ежедневный онлайн', style: TextInputStyle.Paragraph, placeholder: '+2 от МСК | от 8 часов' },
-      { id: 'servers', label: 'В каких семьях состояли? | Почему выбрали нас?', style: TextInputStyle.Short, placeholder: '...' },
+      { id: 'servers', label: 'Были ли в семьях? Почему выбрали нас?', style: TextInputStyle.Short, placeholder: '...' },
       { id: 'recoil_links', label: 'Откаты стрельбы (YouTube / Rutube)', style: TextInputStyle.Paragraph, placeholder: 'https://youtube.com..' }
     ];
     modal.addComponents(...fields.map(f => new ActionRowBuilder().addComponents(
