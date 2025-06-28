@@ -127,10 +127,10 @@ client.on('interactionCreate', async interaction => {
   if (interaction.isButton() && interaction.customId === 'open_modal') {
     const modal = new ModalBuilder().setCustomId('application_modal').setTitle('📝 Заявка в семью');
     const fields = [
-      { id: 'nickname_stat', label: 'Никнейм | статик', style: TextInputStyle.Short, placeholder: 'Sky Garcia | 100000' },
-      { id: 'irl_name_age', label: 'IRL Имя | возраст', style: TextInputStyle.Short, placeholder: 'Тима | 20' },
-      { id: 'family_history', label: 'В каких семьях состояли ранее', style: TextInputStyle.Paragraph, placeholder: 'Укажите, если были в других семьях' },
-      { id: 'servers', label: 'На каких серверах вкачаны персонажи?', style: TextInputStyle.Short, placeholder: '06, 11, 15' },
+      { id: 'nickname_stat', label: 'Ник | статик на Phoenix | Имя и Возраст', style: TextInputStyle.Short, placeholder: 'Sky Garcia | 100000 | Тима 20' },
+      { id: 'irl_name_age', label: 'На каких серверах прокачены персы?', style: TextInputStyle.Short, placeholder: '06, 11, 15...' },
+      { id: 'family_history', label: 'Ваш часовой пояс | Ежедневный онлайн', style: TextInputStyle.Paragraph, placeholder: '+2 от МСК | от 8 часов' },
+      { id: 'servers', label: 'В каких семьях состояли ранее? | Почему выбрали именно нас?', style: TextInputStyle.Short, placeholder: '...' },
       { id: 'recoil_links', label: 'Откаты стрельбы (YouTube / Rutube)', style: TextInputStyle.Paragraph, placeholder: 'https://youtube.com..' }
     ];
     modal.addComponents(...fields.map(f => new ActionRowBuilder().addComponents(
@@ -185,7 +185,7 @@ const channel = await guild.channels.create({
       new ButtonBuilder().setCustomId(`decline_app:${user.id}`).setLabel('Отклонить').setStyle(ButtonStyle.Danger)
     );
 
-    const rolesToMention = ['1203016198850355200', '1203021666800902100'];
+    const rolesToMention = ['1203021666800902184', '1203016198850355231'];
 
     await channel.send({
       content: rolesToMention.map(id => `<@&${id}>`).join(' '),
@@ -258,6 +258,11 @@ const channel = await guild.channels.create({
   }
 
   await appChannel.send(`✅ Заявка от <@${targetUser.id}> принята модератором ${interaction.user}`);
+
+ setTimeout(() => {
+    appChannel.delete().catch(() => {});
+  }, 5000);
+
   return;
 }
 
