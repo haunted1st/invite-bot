@@ -326,39 +326,52 @@ const channel = await guild.channels.create({
     }
   }
    if (interaction.type === InteractionType.ModalSubmit && interaction.customId.startsWith('decline_reason:')) {
-    const userId = interaction.customId.split(':')[1];
-    const reason = interaction.fields.getTextInputValue('reason');
+  const userId = interaction.customId.split(':')[1];
+  const reason = interaction.fields.getTextInputValue('reason');
 
-    const guild = interaction.guild;
-    const declineChannel = guild.channels.cache.get(CHANNEL_DECLINE_ID);
-    const targetUser = await client.users.fetch(userId).catch(() => null);
-    if (!targetUser) return interaction.reply({ content: 'Пользователь не найден.', ephemeral: true });
+  const guild = interaction.guild;
+  const declineChannel = guild.channels.cache.get(CHANNEL_DECLINE_ID);
+  const targetUser = await client.users.fetch(userId).catch(() => null);
+  if (!targetUser) return interaction.reply({ content: 'Пользователь не найден.', ephemeral: true });
 
-    const values = applicationsData[userId];
-    if (values) {
-      const declineEmbed = new EmbedBuilder()
-        .setTitle('❌ Заявка отклонена')
-        .setColor(0xe74c3c)
-        .addFields(
-          { name: 'Ваш никнейм и статик', value: values.nickname || '—' },
-          { name: 'IRL Имя и возраст', value: values.irl || '—' },
-          { name: 'В каких семьях состояли ранее? ( Подробнее )', value: values.history || '—' },
-          { name: 'На каких серверах вкачаны персы?', value: values.servers || '—' },
-          { name: 'Откаты стрельбы с GunGame ( От 5 мин )', value: values.recoil || '—' },
-          { name: 'Пользователь', value: `<@${targetUser.id}>` },
-          { name: 'Username', value: targetUser.username },
-          { name: 'ID', value: targetUser.id },
-          { name: 'Кого', value: `<@${targetUser.id}>` },
-          { name: 'Отклонил', value: `${interaction.user}` },
-          { name: 'Причина', value: reason },
-          { name: 'Время', value: `<t:${Math.floor(Date.now() / 1000)}:f>` }
-        );
-      declineChannel?.send({ embeds: [declineEmbed] });
-    }
+  const values = applicationsData[userId];
+  if (values) {
+    const declineEmbed = new EmbedBuilder()
+      .setTitle('❌ Заявка отклонена')
+      .setColor(0xe74c3c)
+      .addFields(
+        { name: 'Ваш никнейм и статик', value: values.nickname || '—' },
+        { name: 'IRL Имя и возраст', value: values.irl || '—' },
+        { name: 'В каких семьях состояли ранее? ( Подробнее )', value: values.history || '—' },
+        { name: 'На каких серверах вкачаны персы?', value: values.servers || '—' },
+        { name: 'Откаты стрельбы с GunGame ( От 5 мин )', value: values.recoil || '—' },
+        { name: 'Пользователь', value: `<@${targetUser.id}>` },
+        { name: 'Username', value: targetUser.username },
+        { name: 'ID', value: targetUser.id },
+        { name: 'Кого', value: `<@${targetUser.id}>` },
+        { name: 'Отклонил', value: `${interaction.user}` },
+        { name: 'Причина', value: reason },
+        { name: 'Время', value: `<t:${Math.floor(Date.now() / 1000)}:f>` }
+      );
+    declineChannel?.send({ embeds: [declineEmbed] });
 
-    await interaction.reply({ content: `Заявка отклонена с причиной: ${reason}`, ephemeral: true });
-    return;
+    // ⬇️ Вот это — новый код
+    const dmEmbed = new EmbedBuilder()
+      .setTitle('❌ Ваша заявка отклонена')
+      .setDescription(
+        `К сожалению, ваша заявка в **G A R C I A** была отклонена.\n\n` +
+        `**Причина:** ${reason}`
+      )
+      .setColor(0xe74c3c)
+      .setFooter({ text: `Модератор: ${interaction.user.tag}` })
+      .setTimestamp();
+
+    await targetUser.send({ embeds: [dmEmbed] }).catch(() => {});
   }
+
+  await interaction.reply({ content: `Заявка отклонена с причиной: ${reason}`, ephemeral: true });
+  return;
+}
 
   if (interaction.isStringSelectMenu() && interaction.customId.startsWith('select_call_channel:')) {
     try {
