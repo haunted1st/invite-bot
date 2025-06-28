@@ -42,7 +42,7 @@ const CHANNEL_LOG_ID = '1304923881294925876';
 const INVITE_CHANNEL_ID = '1387148896320487564';
 
 // Роли, которым можно видеть заявки и управлять ими
-const ALLOWED_ROLES = ['1203016198850355231', '1203021666800902184']; // PR и High PR
+const ROLES_ACCESS_IDS = ['1203016198850355231', '1203021666800902184']; // PR и High PR
 
 // Жёстко заданные голосовые каналы для обзвона
 const voiceChannelIdsForCall = [
