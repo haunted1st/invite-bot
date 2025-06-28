@@ -178,8 +178,10 @@ client.on('interactionCreate', async interaction => {
       embeds: [embed],
       components: [buttons]
     });
+
     await interaction.editReply({ content: `✅ Ваша заявка отправлена: ${channel}` });
   }
+});
 
   // Обработка кнопок
   if (interaction.isButton()) {
