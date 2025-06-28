@@ -171,31 +171,34 @@ client.on('interactionCreate', async interaction => {
       new ButtonBuilder().setCustomId(`decline_app:${user.id}`).setLabel('Отклонить').setStyle(ButtonStyle.Danger)
     );
 
+    const rolesToMention = ALLOWED_ROLES;
+
     await channel.send({
-  content: rolesToMention.map(id => `<@&${id}>`).join(' '),
-  embeds: [embed],
-  components: [buttons]
-});
-await interaction.editReply({ content: `✅ Ваша заявка отправлена: ${channel}` });
-
-// 2. Обработка кнопок
-if (interaction.isButton()) {
-  const [action, userId] = interaction.customId.split(':');
-  if (!['accept_app', 'decline_app', 'review_app', 'call_app'].includes(action)) return;
-
-  const guild = interaction.guild;
-  const logChannel = guild.channels.cache.get(CHANNEL_LOG_ID);
-  const acceptChannel = guild.channels.cache.get(CHANNEL_ACCEPT_ID);
-  const declineChannel = guild.channels.cache.get(CHANNEL_DECLINE_ID);
-  const targetUser = await client.users.fetch(userId).catch(() => null);
-  if (!targetUser) return interaction.reply({ content: 'Пользователь не найден.', ephemeral: true });
-
-  const appChannel = interaction.channel;
-  const member = await guild.members.fetch(interaction.user.id).catch(() => null);
-
-  if (!member || !hasAllowedRole(member)) {
-    return interaction.reply({ content: 'У вас нет прав для этого действия.', ephemeral: true });
+      content: rolesToMention.map(id => `<@&${id}>`).join(' '),
+      embeds: [embed],
+      components: [buttons]
+    });
+    await interaction.editReply({ content: `✅ Ваша заявка отправлена: ${channel}` });
   }
+
+  // Обработка кнопок
+  if (interaction.isButton()) {
+    const [action, userId] = interaction.customId.split(':');
+    if (!['accept_app', 'decline_app', 'review_app', 'call_app'].includes(action)) return;
+
+    const guild = interaction.guild;
+    const logChannel = guild.channels.cache.get(CHANNEL_LOG_ID);
+    const acceptChannel = guild.channels.cache.get(CHANNEL_ACCEPT_ID);
+    const declineChannel = guild.channels.cache.get(CHANNEL_DECLINE_ID);
+    const targetUser = await client.users.fetch(userId).catch(() => null);
+    if (!targetUser) return interaction.reply({ content: 'Пользователь не найден.', ephemeral: true });
+
+    const appChannel = interaction.channel;
+    const member = await guild.members.fetch(interaction.user.id).catch(() => null);
+
+    if (!member || !hasAllowedRole(member)) {
+      return interaction.reply({ content: 'У вас нет прав для этого действия.', ephemeral: true });
+    }
 
     if (action === 'accept_app') {
       await interaction.update({ content: `Заявка **принята** ${interaction.user}`, components: [] });
@@ -259,11 +262,11 @@ if (interaction.isButton()) {
       return interaction.reply({ content: 'Выбранный голосовой канал не найден.', ephemeral: true });
     }
 
-   const logChannel = guild.channels.cache.get(CHANNEL_LOG_ID);
-   logChannel?.send(`📞 Обзвон заявки от ${targetUser.tag} будет в голосовом канале ${selectedChannel.name} (назначил ${interaction.user.tag})`);
-   await interaction.update({ content: `📞 Обзвон будет проходить в голосовом канале: **${selectedChannel.name}**`, components: [] });
-   await targetUser.send(`Вы были вызваны на обзвон в канал **${selectedChannel.name}** модератором ${interaction.user.tag}.`).catch(() => {});
- }
-});  
+    const logChannel = guild.channels.cache.get(CHANNEL_LOG_ID);
+    logChannel?.send(`📞 Обзвон заявки от ${targetUser.tag} будет в голосовом канале ${selectedChannel.name} (назначил ${interaction.user.tag})`);
+    await interaction.update({ content: `📞 Обзвон будет проходить в голосовом канале: **${selectedChannel.name}**`, components: [] });
+    await targetUser.send(`Вы были вызваны на обзвон в канал **${selectedChannel.name}** модератором ${interaction.user.tag}.`).catch(() => {});
+  }
+}); // <-- закрываем client.on('interactionCreate')
 
 client.login(process.env.TOKEN);
