@@ -82,18 +82,31 @@ function createStatusNotificationEmbed(status, applicationName, channelName = ''
 
 client.once('ready', async () => {
   console.log(`✅ Бот запущен как ${client.user.tag}`);
+
   const inviteChannel = await client.channels.fetch(INVITE_CHANNEL_ID);
-  if (!inviteChannel?.isTextBased()) return;
+  if (!inviteChannel || !inviteChannel.isTextBased()) return;
+
   const messages = await inviteChannel.messages.fetch({ limit: 10 });
-  const botMessage = messages.find(m => m.author.id === client.user.id);
+  const botMessage = messages.find((m) => m.author.id === client.user.id);
   if (botMessage) await botMessage.delete().catch(() => {});
 
   const embed = new EmbedBuilder()
     .setTitle('📋 Заполните форму')
-    .setDescription('Нажмите на кнопку ниже, чтобы оставить заявку.')
+    .setDescription(
+      'Нажмите на кнопку ниже, чтобы оставить заявку.\n\n' +
+      '**Как это работает?**\n' +
+      '1. Нажмите на кнопку **Оставить заявку**.\n' +
+      '2. Заполните все поля формы.\n' +
+      '3. Отправьте форму, и мы рассмотрим вашу заявку в ближайшее время.'
+    )
+    .setImage('https://media.discordapp.net/attachments/1300952767078203493/1388174214187581582/ezgif-61741d6e62f365.gif')
     .setColor(0x2f3136);
 
-  const button = new ButtonBuilder().setCustomId('open_modal').setLabel('Оставить заявку').setStyle(ButtonStyle.Primary);
+  const button = new ButtonBuilder()
+    .setCustomId('open_modal')
+    .setLabel('Оставить заявку')
+    .setStyle(ButtonStyle.Primary);
+
   const row = new ActionRowBuilder().addComponents(button);
   await inviteChannel.send({ embeds: [embed], components: [row] });
 });
