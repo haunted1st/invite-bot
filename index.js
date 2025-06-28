@@ -271,11 +271,11 @@ client.on('interactionCreate', async interaction => {
       const logChannel = guild.channels.cache.get(CHANNEL_LOG_ID);
 
       logChannel?.send(
-        `📞 Заявка от **${targetUser.tag}** вызвана на обзвон.\n` +
-        `🔊 Канал: **${selectedChannel.name}**\n` +
-        `👤 Вызвал: ${interaction.user}\n` +
-        `🔗 ${voiceLink}`
-      );
+  `📞 Заявка от <@${targetUser.id}> вызвана на обзвон.\n` +
+  `🔊 Канал: **${selectedChannel.name}**\n` +
+  `👤 Вызвал: ${interaction.user}\n` +
+  `🔗 ${voiceLink}`
+);
 
       await interaction.update({
         content: `📞 Модератор ${interaction.user} вызвал ${targetUser} на обзвон в **${selectedChannel.name}**\n🔗 Ссылка: ${voiceLink}`,
