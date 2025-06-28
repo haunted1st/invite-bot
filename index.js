@@ -295,12 +295,14 @@ if (interaction.isStringSelectMenu() && interaction.customId.startsWith('select_
       await targetUser.send({ embeds: [dmEmbed] }).catch(() => {});
 
     } catch (error) {
-      console.error('Ошибка при обработке select_call_channel:', error);
-      if (!interaction.replied) {
-        await interaction.reply({ content: 'Произошла ошибка при обработке выбора.', ephemeral: true });
-      }
-    }
-  } // <-- закрываем if
+  console.error('Ошибка при обработке select_call_channel:', error);
+  if (!interaction.replied) {
+    await interaction.reply({ content: 'Произошла ошибка при обработке выбора.', ephemeral: true });
+  }
+} // <-- закрываем try/catch
+
+} // <-- закрываем if interaction.isStringSelectMenu
+
 }); // <-- закрываем client.on('interactionCreate')
 
 client.login(process.env.TOKEN);
