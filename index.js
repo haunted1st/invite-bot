@@ -54,8 +54,6 @@ function hasAllowedRole(member) {
   return member.roles.cache.some(role => ALLOWED_ROLES.includes(role.id));
 }
 
-const applicationsData = {};
-
 function createStatusNotificationEmbed(status, applicationName, channelName = '', guildId, applicationLink = '') {
   let color, title = '', description = '';
   const timeAgo = dayjs().fromNow();
