@@ -383,17 +383,36 @@ const channel = await guild.channels.create({
 }
 
   if (interaction.isStringSelectMenu() && interaction.customId.startsWith('select_call_channel:')) {
-    try {
-      const userId = interaction.customId.split(':')[1];
-      const guild = interaction.guild;
-      const targetUser = await client.users.fetch(userId).catch(() => null);
-      if (!targetUser) return interaction.reply({ content: 'Пользователь не найден.', ephemeral: true });
+  try {
+    const userId = interaction.customId.split(':')[1];
+    const guild = interaction.guild;
+    const targetUser = await client.users.fetch(userId).catch(() => null);
+    if (!targetUser) return interaction.reply({ content: 'Пользователь не найден.', ephemeral: true });
 
-      const selectedChannelId = interaction.values[0];
-      const selectedChannel = guild.channels.cache.get(selectedChannelId);
-      if (!selectedChannel || selectedChannel.type !== ChannelType.GuildVoice) {
-        return interaction.reply({ content: 'Выбранный голосовой канал не найден.', ephemeral: true });
+    const selectedChannelId = interaction.values[0];
+    const selectedChannel = guild.channels.cache.get(selectedChannelId);
+    if (!selectedChannel || selectedChannel.type !== ChannelType.GuildVoice) {
+      return interaction.reply({ content: 'Выбранный голосовой канал не найден.', ephemeral: true });
+    }
+
+    // 🔐 Удаляем доступ ко всем обзвон-каналам
+    for (const channelId of voiceChannelIdsForCall) {
+      const ch = guild.channels.cache.get(channelId);
+      if (ch && ch.type === ChannelType.GuildVoice) {
+        await ch.permissionOverwrites.edit(targetUser.id, {
+          ViewChannel: false,
+          Connect: false,
+          Speak: false
+        }).catch(() => {});
       }
+    }
+
+    // ✅ Выдаём доступ только в выбранный канал
+    await selectedChannel.permissionOverwrites.edit(targetUser.id, {
+      ViewChannel: true,
+      Connect: true,
+      Speak: true
+    }).catch(() => {});
 
       const voiceLink = `https://discord.com/channels/${guild.id}/${selectedChannel.id}`;
       const now = `<t:${Math.floor(Date.now() / 1000)}:f>`;
