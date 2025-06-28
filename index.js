@@ -251,8 +251,9 @@ client.on('interactionCreate', async interaction => {
       await interaction.reply({ content: 'Выберите голосовой канал для обзвона:', components: [row], ephemeral: true });
       return;
     }
+  }
 
-if (interaction.isStringSelectMenu() && interaction.customId.startsWith('select_call_channel:')) {
+  if (interaction.isStringSelectMenu() && interaction.customId.startsWith('select_call_channel:')) {
     try {
       const userId = interaction.customId.split(':')[1];
       const guild = interaction.guild;
@@ -295,14 +296,12 @@ if (interaction.isStringSelectMenu() && interaction.customId.startsWith('select_
       await targetUser.send({ embeds: [dmEmbed] }).catch(() => {});
 
     } catch (error) {
-  console.error('Ошибка при обработке select_call_channel:', error);
-  if (!interaction.replied) {
-    await interaction.reply({ content: 'Произошла ошибка при обработке выбора.', ephemeral: true });
+      console.error('Ошибка при обработке select_call_channel:', error);
+      if (!interaction.replied) {
+        await interaction.reply({ content: 'Произошла ошибка при обработке выбора.', ephemeral: true });
+      }
+    }
   }
-} // <-- закрываем try/catch
-
-} // <-- закрываем if interaction.isStringSelectMenu
-
 }); // <-- закрываем client.on('interactionCreate')
 
 client.login(process.env.TOKEN);
