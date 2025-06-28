@@ -338,6 +338,6 @@ client.on('interactionCreate', async interaction => {
 
     await targetUser.send({ embeds: [dmEmbed] }).catch(() => {});
   }
-});; // <-- закрываем client.on('interactionCreate')
+}); // <-- закрываем client.on('interactionCreate')
 
 client.login(process.env.TOKEN);
