@@ -242,10 +242,10 @@ const channel = await guild.channels.create({
       .setTitle('✅ Заявка принята')
       .setColor(0x2ecc71)
       .addFields(
-        { name: 'Никнейм | статик', value: values.nickname || '—' },
-        { name: 'IRL Имя | возраст', value: values.irl || '—' },
-        { name: 'В каких семьях состояли ранее? ( Подробнее )', value: values.history || '—' },
-        { name: 'На каких серверах вкачаны персонажи?', value: values.servers || '—' },
+        { name: 'Ник | статик на Phoenix | Имя и Возраст', value: values.nickname || '—' },
+        { name: 'На каких серверах прокачены персы?', value: values.irl || '—' },
+        { name: 'Ваш часовой пояс | Ежедневный онлайн', value: values.history || '—' },
+        { name: 'Были ли в семьях? Почему выбрали нас?', value: values.servers || '—' },
         { name: 'Откаты стрельбы (YouTube / Rutube)', value: values.recoil || '—' },
         { name: 'Пользователь', value: `<@${targetUser.id}>` },
         { name: 'Username', value: targetUser.username },
@@ -344,11 +344,11 @@ const channel = await guild.channels.create({
       .setTitle('❌ Заявка отклонена')
       .setColor(0xe74c3c)
       .addFields(
-        { name: 'Ваш никнейм и статик', value: values.nickname || '—' },
-        { name: 'IRL Имя и возраст', value: values.irl || '—' },
-        { name: 'В каких семьях состояли ранее? ( Подробнее )', value: values.history || '—' },
-        { name: 'На каких серверах вкачаны персы?', value: values.servers || '—' },
-        { name: 'Откаты стрельбы с GunGame ( От 5 мин )', value: values.recoil || '—' },
+        { name: 'Ник | статик на Phoenix | Имя и Возраст', value: values.nickname || '—' },
+        { name: 'На каких серверах прокачены персы?', value: values.irl || '—' },
+        { name: 'Ваш часовой пояс | Ежедневный онлайн', value: values.history || '—' },
+        { name: 'Были ли в семьях? Почему выбрали нас?', value: values.servers || '—' },
+        { name: 'Откаты стрельбы (YouTube / Rutube)', value: values.recoil || '—' },
         { name: 'Пользователь', value: `<@${targetUser.id}>` },
         { name: 'Username', value: targetUser.username },
         { name: 'ID', value: targetUser.id },
