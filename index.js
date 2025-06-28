@@ -117,9 +117,9 @@ client.on('interactionCreate', async interaction => {
     const fields = [
       { id: 'nickname_stat', label: 'Никнейм | статик', style: TextInputStyle.Short, placeholder: 'Sky Garcia | 100000' },
       { id: 'irl_name_age', label: 'IRL Имя | возраст', style: TextInputStyle.Short, placeholder: 'Тима | 20' },
-      { id: 'family_history', label: 'Семьи ранее', style: TextInputStyle.Paragraph, placeholder: '...' },
-      { id: 'servers', label: 'Сервера', style: TextInputStyle.Short, placeholder: '11, 15' },
-      { id: 'recoil_links', label: 'Откаты стрельбы', style: TextInputStyle.Paragraph, placeholder: 'https://...' }
+      { id: 'family_history', label: 'В каких семьях состояли ранее', style: TextInputStyle.Paragraph, placeholder: 'Укажите, если были в других семьях' },
+      { id: 'servers', label: 'На каких серверах вкачаны персонажи?', style: TextInputStyle.Short, placeholder: '06, 11, 15' },
+      { id: 'recoil_links', label: 'Откаты стрельбы (YouTube / Rutube)', style: TextInputStyle.Paragraph, placeholder: 'https://...' }
     ];
     modal.addComponents(...fields.map(f => new ActionRowBuilder().addComponents(
       new TextInputBuilder().setCustomId(f.id).setLabel(f.label).setStyle(f.style).setPlaceholder(f.placeholder).setRequired(true)
