@@ -431,6 +431,19 @@ const channel = await guild.channels.create({
         components: []
       });
 
+      const refreshedButtons = new ActionRowBuilder().addComponents(
+  new ButtonBuilder().setCustomId(`accept_app:${userId}`).setLabel('Принять').setStyle(ButtonStyle.Success),
+  new ButtonBuilder().setCustomId(`review_app:${userId}`).setLabel('Рассмотреть').setStyle(ButtonStyle.Secondary),
+  new ButtonBuilder().setCustomId(`call_app:${userId}`).setLabel('Обзвон').setStyle(ButtonStyle.Primary),
+  new ButtonBuilder().setCustomId(`decline_app:${userId}`).setLabel('Отклонить').setStyle(ButtonStyle.Danger)
+);
+
+// Отправим новое сообщение с теми же кнопками
+await interaction.channel.send({
+  content: `ℹ️ После обзвона, используйте кнопки ниже для принятия решения:`,
+  components: [refreshedButtons]
+});
+
       const dmEmbed = new EmbedBuilder()
         .setTitle('📞 Приглашение на обзвон')
         .setDescription(
