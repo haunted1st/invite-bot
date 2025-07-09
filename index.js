@@ -384,6 +384,8 @@ const channel = await guild.channels.create({
 
   if (interaction.isStringSelectMenu() && interaction.customId.startsWith('select_call_channel:')) {
   try {
+    await interaction.deferUpdate();
+
     const userId = interaction.customId.split(':')[1];
     const guild = interaction.guild;
     const targetUser = await client.users.fetch(userId).catch(() => null);
